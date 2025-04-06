@@ -1,5 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+</script>
 
 <template>
-  <h1 class="text-sm">Hello world</h1>
+<h1>Hello</h1>
 </template>

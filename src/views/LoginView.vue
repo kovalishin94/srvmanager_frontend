@@ -5,6 +5,7 @@ import apiClient from '@/services/api.ts'
 import { useRouter } from 'vue-router'
 import { AxiosError } from 'axios'
 import InputField from '@/components/UI/InputField.vue'
+import MainButton from '@/components/UI/MainButton.vue'
 
 const router = useRouter()
 const userStore = useUser()
@@ -64,7 +65,7 @@ async function login() {
 </script>
 
 <template>
-  <div class="flex flex-col max-w-sm gap-y-4 mx-auto h-dvh justify-center">
+  <div @keyup.enter="login" class="flex flex-col max-w-sm gap-y-4 mx-auto h-dvh justify-center">
     <InputField
       id="username"
       :errors="errors.username ? [errors.username] : []"
@@ -77,7 +78,7 @@ async function login() {
       :errors="errors.password ? [errors.password] : []"
       label="Пароль"
       v-model="password"
-      @keyup.enter="login"
     />
+    <MainButton @click="login" class="mt-4">Войти</MainButton>
   </div>
 </template>
