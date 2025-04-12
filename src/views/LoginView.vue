@@ -79,6 +79,6 @@ async function login() {
       label="Пароль"
       v-model="password"
     />
-    <MainButton @click="login" class="mt-4">Войти</MainButton>
+    <MainButton @click="login" class="mt-5 w-full">Войти</MainButton>
   </div>
 </template>
