@@ -7,6 +7,7 @@ import CloseIcon from '@/components/UI/Icons/CloseIcon.vue'
 import ExitIcon from '@/components/UI/Icons/ExitIcon.vue'
 import NavbarMenuButton from '@/components/Navbar/NavbarMenuButton.vue'
 import NavbarDropdownMenuButton from '@/components/Navbar/NavbarDropdownMenuButton.vue'
+import HostIcon from '@/components/UI/Icons/HostIcon.vue'
 
 const userStore = useUser()
 
@@ -16,7 +17,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <nav class="bg-white border-gray-200 dark:bg-gray-900">
+  <nav class="bg-white border-gray-200 dark:bg-gray-900 h-18">
     <div class="max-w-screen-xl flex flex-wrap items-center p-4">
       <button
         type="button"
@@ -41,7 +42,7 @@ onMounted(() => {
       id="main-sidebar-label"
       class="text-base font-semibold text-gray-500 uppercase dark:text-gray-400"
     >
-      Menu
+      Меню
     </h5>
     <button
       type="button"
@@ -54,18 +55,17 @@ onMounted(() => {
     </button>
     <div class="py-4 overflow-y-auto">
       <ul class="space-y-2 font-medium">
-        <li>
-          <NavbarDropdownMenuButton/>
-        </li>
-        <li>
-          <NavbarMenuButton
-            @click="userStore.removeUserData"
-            data-drawer-hide="main-sidebar"
-            name="Выход"
-          >
-            <ExitIcon />
-          </NavbarMenuButton>
-        </li>
+        <NavbarMenuButton name="Хосты" is_link link="hosts">
+          <HostIcon/>
+        </NavbarMenuButton>
+        <NavbarDropdownMenuButton />
+        <NavbarMenuButton
+          @click="userStore.removeUserData"
+          data-drawer-hide="main-sidebar"
+          name="Выход"
+        >
+          <ExitIcon />
+        </NavbarMenuButton>
       </ul>
     </div>
   </div>

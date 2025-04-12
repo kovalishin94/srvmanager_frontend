@@ -11,5 +11,5 @@ userStore.initUser()
 
 <template>
   <Navbar v-if="route.name !== 'login'"/>
-  <RouterView />
+  <RouterView class="pt-18"/>
 </template>
