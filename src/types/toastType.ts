@@ -1,4 +1,4 @@
-export interface Toast {
+export interface ToastType {
   id: number
   message: string
   type: "success" | "warning" | "danger"

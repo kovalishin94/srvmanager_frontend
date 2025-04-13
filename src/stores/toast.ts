@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import type { Toast } from '@/types/toast.ts'
+import type { ToastType } from '@/types/toastType.ts'
 
 export const useToast = defineStore('toast', {
   state: () => ({
-    toasts: [] as Toast[],
+    toasts: [] as ToastType[],
   }),
   actions: {
     addToast(

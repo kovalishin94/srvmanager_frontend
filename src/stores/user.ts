@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import { type User } from '@/types/user.ts'
+import { type UserType } from '@/types/userType.ts'
 import apiClient from '@/services/api.ts'
 
 export const useUser = defineStore('user', {
@@ -19,7 +19,7 @@ export const useUser = defineStore('user', {
       is_active: false,
       is_staff: false,
       is_superuser: false,
-    } as User,
+    } as UserType,
   }),
   actions: {
     getUserDataFromStorage() {

@@ -1,4 +1,4 @@
-export interface User {
+export interface UserType {
   isAuthenticated: boolean
   accessToken: string | null
   refreshToken: string | null
