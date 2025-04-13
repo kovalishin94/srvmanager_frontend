@@ -18,7 +18,6 @@ defineProps({
 })
 
 const emit = defineEmits(['proxy'])
-
 </script>
 
 <template>
@@ -42,8 +41,9 @@ const emit = defineEmits(['proxy'])
         <button
           @click="emit('proxy', item.action)"
           class="cursor-pointer text-left block w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-          >{{ item.name }}</button
         >
+          {{ item.name }}
+        </button>
       </li>
     </ul>
   </div>

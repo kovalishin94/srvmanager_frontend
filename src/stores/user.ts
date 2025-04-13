@@ -1,25 +1,26 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import {type User} from '@/types/user.ts'
+import { type User } from '@/types/user.ts'
 import apiClient from '@/services/api.ts'
 
 export const useUser = defineStore('user', {
   state: () => ({
-  router: useRouter(),
-  user: {
-    isAuthenticated: false,
-    accessToken: null,
-    refreshToken: null,
-    id: null,
-    username: null,
-    first_name: null,
-    last_name: null,
-    email: null,
-    is_active: false,
-    is_staff: false,
-    is_superuser: false,
-  } as User,
-}),
+    router: useRouter(),
+    theme: 'dark',
+    user: {
+      isAuthenticated: false,
+      accessToken: null,
+      refreshToken: null,
+      id: null,
+      username: null,
+      first_name: null,
+      last_name: null,
+      email: null,
+      is_active: false,
+      is_staff: false,
+      is_superuser: false,
+    } as User,
+  }),
   actions: {
     getUserDataFromStorage() {
       this.user.id = Number(localStorage.getItem('id'))
@@ -39,8 +40,11 @@ export const useUser = defineStore('user', {
         this.user.refreshToken = localStorage.getItem('refreshToken')
         this.getUserDataFromStorage()
 
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('accessToken')}`
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${localStorage.getItem('accessToken')}`
       }
+      this.theme = localStorage.getItem('theme') || 'dark'
+      document.body.setAttribute('data-theme', this.theme)
     },
 
     removeUserData() {
@@ -73,9 +77,9 @@ export const useUser = defineStore('user', {
 
     async refreshToken(f: Function, ...params: any[]) {
       try {
-        const response = await apiClient.post(
-          '/token/refresh/',
-          {refresh: this.user.refreshToken})
+        const response = await apiClient.post('/token/refresh/', {
+          refresh: this.user.refreshToken,
+        })
 
         localStorage.setItem('accessToken', response.data?.access)
         this.user.accessToken = response.data?.access
@@ -102,7 +106,6 @@ export const useUser = defineStore('user', {
         localStorage.setItem('is_superuser', response.data?.is_superuser)
 
         this.getUserDataFromStorage()
-
       } catch (error) {
         console.error(error)
         this.removeUserData()
@@ -118,6 +121,16 @@ export const useUser = defineStore('user', {
       this.user.refreshToken = refreshToken
 
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-    }
-  }
+    },
+    toggleTheme() {
+      if (this.theme === 'dark') {
+        this.theme = 'light'
+        localStorage.setItem('theme', 'light')
+      } else {
+        this.theme = 'dark'
+        localStorage.setItem('theme', 'dark')
+      }
+      document.body.setAttribute('data-theme', this.theme)
+    },
+  },
 })

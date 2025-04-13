@@ -8,6 +8,7 @@ import ExitIcon from '@/components/UI/Icons/ExitIcon.vue'
 import NavbarMenuButton from '@/components/Navbar/NavbarMenuButton.vue'
 import NavbarDropdownMenuButton from '@/components/Navbar/NavbarDropdownMenuButton.vue'
 import HostIcon from '@/components/UI/Icons/HostIcon.vue'
+import ThemeIcon from '@/components/UI/Icons/ThemeIcon.vue'
 
 const userStore = useUser()
 
@@ -18,7 +19,7 @@ onMounted(() => {
 
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900 h-18">
-    <div class="max-w-screen-xl flex flex-wrap items-center p-4">
+    <div class="max-w-screen-xl flex flex-wrap items-center p-4 justify-between">
       <button
         type="button"
         class="cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
@@ -29,6 +30,12 @@ onMounted(() => {
       >
         <span class="sr-only">Open main menu</span>
         <MenuIcon />
+      </button>
+      <button
+        class="cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        @click="userStore.toggleTheme"
+      >
+        <ThemeIcon/>
       </button>
     </div>
   </nav>
@@ -56,7 +63,7 @@ onMounted(() => {
     <div class="py-4 overflow-y-auto">
       <ul class="space-y-2 font-medium">
         <NavbarMenuButton name="Хосты" is_link link="hosts">
-          <HostIcon/>
+          <HostIcon />
         </NavbarMenuButton>
         <NavbarDropdownMenuButton />
         <NavbarMenuButton
