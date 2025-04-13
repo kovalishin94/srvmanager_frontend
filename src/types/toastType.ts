@@ -1,5 +1,5 @@
 export interface ToastType {
-  id: number
+  id: string
   message: string
   type: "success" | "warning" | "danger"
   duration: number

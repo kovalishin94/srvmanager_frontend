@@ -19,7 +19,7 @@ onMounted(() => {
 
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900 h-18">
-    <div class="max-w-screen-xl flex flex-wrap items-center p-4 justify-between">
+    <div class="flex items-center p-4">
       <button
         type="button"
         class="cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
@@ -32,7 +32,7 @@ onMounted(() => {
         <MenuIcon />
       </button>
       <button
-        class="cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        class="ml-auto cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
         @click="userStore.toggleTheme"
       >
         <ThemeIcon/>

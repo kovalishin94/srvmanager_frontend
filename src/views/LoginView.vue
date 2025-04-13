@@ -65,18 +65,18 @@ async function login() {
 </script>
 
 <template>
-  <div @keyup.enter="login" class="flex flex-col max-w-sm gap-y-4 mx-auto h-dvh justify-center">
+  <div @keyup.enter="login" class="flex flex-col max-w-sm gap-y-6 mx-auto h-dvh justify-center">
     <InputField
       id="username"
       :errors="errors.username ? [errors.username] : []"
-      label="Логин"
+      placeholder="Логин"
       v-model="username"
     />
     <InputField
       id="password"
       type="password"
       :errors="errors.password ? [errors.password] : []"
-      label="Пароль"
+      placeholder="Пароль"
       v-model="password"
     />
     <MainButton @click="login" class="mt-5 w-full">Войти</MainButton>

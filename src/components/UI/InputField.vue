@@ -14,7 +14,7 @@ defineProps({
   },
   label: {
     type: String,
-    default: 'Input',
+    default: '',
   },
   placeholder: {
     type: String,
@@ -36,6 +36,7 @@ function handleInputChange(event: Event) {
 <template>
   <div>
     <label
+      v-if="label"
       :for="id"
       :class="[
         errors.length
@@ -51,6 +52,7 @@ function handleInputChange(event: Event) {
       :value="modelValue"
       @input="handleInputChange"
       class="border text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700"
+      :placeholder="placeholder"
       :class="[
         errors.length > 0
           ? 'bg-red-50 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500'

@@ -11,7 +11,7 @@ export const useToast = defineStore('toast', {
       type: 'success' | 'warning' | 'danger',
       duration: number = 3000,
     ): void {
-      const id = Date.now()
+      const id = crypto.randomUUID()
       this.toasts.push({ id, message, type, duration })
 
       setTimeout(() => {

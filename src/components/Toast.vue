@@ -7,7 +7,6 @@ const toastStore = useToast()
 
 <template>
   <div
-    v-show="toastStore.toasts.length"
     class="fixed flex flex-col items-center w-full max-w-xs p-4 space-y-4 text-gray-500 bg-white  rounded-lg shadow-sm right-5 bottom-5 dark:text-gray-400 dark:bg-gray-800"
     role="alert"
   >
@@ -25,11 +24,14 @@ const toastStore = useToast()
   </div>
 </template>
 
+<!--suppress CssUnusedSymbol -->
 <style scoped>
-.toasts-enter-active {
+.toasts-enter-active,
+.toasts-leave-active {
   transition: all 0.5s ease;
 }
-.toasts-enter-from {
+.toasts-enter-from,
+.toasts-leave-to {
   opacity: 0;
   transform: translateY(50px);
 }
