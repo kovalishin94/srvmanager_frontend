@@ -1,12 +1,14 @@
 <script setup lang="ts">
+type ObjectWithId = {
+  id: string | number
+} & {
+  [key: string]: any
+}
 
-defineProps({
-  columns: {
-    type: Array<String>,
-    required: true
-  }
-})
-
+defineProps<{
+  columns: string[]
+  rows: ObjectWithId[]
+}>()
 </script>
 
 <template>
@@ -17,20 +19,20 @@ defineProps({
           <th scope="col" class="px-6 py-3" v-for="column in columns">{{ column }}</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="rows.length">
         <tr
           class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+          v-for="row in rows"
+          :key="row.id"
         >
-<!--          <th-->
-<!--            scope="row"-->
-<!--            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"-->
-<!--          >-->
-<!--            Apple MacBook Pro 17"-->
-<!--          </th>-->
-          <td class="px-6 py-4">Silver</td>
-          <td class="px-6 py-4">Silver</td>
-          <td class="px-6 py-4">Laptop</td>
-          <td class="px-6 py-4">Laptop</td>
+          <td class="px-6 py-4" v-for="cell in Object.values(row)">{{ cell }}</td>
+        </tr>
+      </tbody>
+      <tbody v-else>
+        <tr
+          class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
+        >
+          <td :colspan="columns.length" class="px-6 py-4 text-xl text-center">Нет данных для отображения</td>
         </tr>
       </tbody>
     </table>
