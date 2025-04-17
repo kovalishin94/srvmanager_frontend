@@ -1,30 +1,21 @@
 <script setup lang="ts">
-defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-  type: {
-    type: String,
-    default: 'text',
-  },
-  errors: {
-    type: Array<String>,
-    default: [],
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: '',
-  },
-  modelValue: {
-    type: String,
-    required: true,
-  },
-})
+interface Props {
+  id: string
+  type?: string
+  errors?: Array<String>
+  label?: string
+  placeholder?: string
+  modelValue: string
+}
+
+const {
+  id,
+  type = 'text',
+  errors = [],
+  label = '',
+  placeholder = '',
+  modelValue,
+} = defineProps<Props>()
 
 const emit = defineEmits(['update:modelValue'])
 
@@ -38,11 +29,7 @@ function handleInputChange(event: Event) {
     <label
       v-if="label"
       :for="id"
-      :class="[
-        errors.length
-        ? 'text-red-700 dark:text-red-500'
-        : 'text-gray-900 dark:text-white'
-        ]"
+      :class="[errors.length ? 'text-red-700 dark:text-red-500' : 'text-gray-900 dark:text-white']"
       class="block mb-2 text-sm font-medium"
       >{{ label }}</label
     >
@@ -60,7 +47,7 @@ function handleInputChange(event: Event) {
       ]"
     />
     <div v-if="errors.length > 0" class="flex flex-col">
-      <p v-for="error in errors" class="mt-2 text-sm text-red-600 dark:text-red-500">{{error}}</p>
+      <p v-for="error in errors" class="mt-2 text-sm text-red-600 dark:text-red-500">{{ error }}</p>
     </div>
   </div>
 </template>
