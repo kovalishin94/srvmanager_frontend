@@ -51,6 +51,15 @@ async function getHosts() {
   }
 }
 
+async function createHost() {
+  try {
+    const response = await apiClient.post('/create/host', newHost.value)
+    console.log(response.data)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 onMounted(() => {
   getHosts()
 })
@@ -59,7 +68,7 @@ onMounted(() => {
 <template>
   <div>
     <MainButton class="mx-6" data-modal-target="createHost" data-modal-toggle="createHost"
-      >Создать</MainButton
+      >Добавить</MainButton
     >
     <DataTable class="px-6 py-2" :columns :rows="hosts" />
     <Modal id="createHost">
@@ -71,7 +80,9 @@ onMounted(() => {
           <InputField id="host-ip" v-model="newHost.ip" placeholder="IP адрес" />
         </div>
       </template>
-      <template #footer> Футер </template>
+      <template #footer>
+        <MainButton @click="createHost">Сохранить</MainButton>
+      </template>
     </Modal>
   </div>
 </template>
