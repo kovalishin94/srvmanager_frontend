@@ -4,6 +4,7 @@ interface Props {
   type?: string
   errors?: Array<String>
   label?: string
+  required?: boolean
   placeholder?: string
   modelValue: string
 }
@@ -13,6 +14,7 @@ const {
   type = 'text',
   errors = [],
   label = '',
+  required = false,
   placeholder = '',
   modelValue,
 } = defineProps<Props>()
@@ -34,12 +36,13 @@ function handleInputChange(event: Event) {
       >{{ label }}</label
     >
     <input
-      :id="id"
-      :type="type"
+      :id
+      :type
       :value="modelValue"
       @input="handleInputChange"
       class="border text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700"
-      :placeholder="placeholder"
+      :placeholder
+      :required
       :class="[
         errors.length > 0
           ? 'bg-red-50 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500'

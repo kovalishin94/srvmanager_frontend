@@ -3,9 +3,10 @@ import { useUser } from '@/stores/user.ts'
 import { ref } from 'vue'
 import apiClient from '@/services/api.ts'
 import { useRouter } from 'vue-router'
-import { AxiosError } from 'axios'
 import InputField from '@/components/UI/InputField.vue'
 import MainButton from '@/components/UI/MainButton.vue'
+import { AxiosError } from 'axios'
+import DangerAlert from '@/components/UI/DangerAlert.vue'
 
 const router = useRouter()
 const userStore = useUser()
@@ -45,19 +46,16 @@ async function login() {
   try {
     const response = await apiClient.post('/token/', {
       username: username.value,
-      password: password.value,
-    })
+      password: password.value
+      },
+    )
     userStore.setTokens(response.data?.access, response.data?.refresh)
     await userStore.getMyData()
     await router.push({ name: 'home' })
   } catch (error) {
     if (error instanceof AxiosError) {
-      switch (error.status) {
-        case 400:
-          showLoginError.value = true
-          break
-        default:
-          console.error(error)
+      if (error.status === 401) {
+        showLoginError.value = true
       }
     }
   }
@@ -66,6 +64,7 @@ async function login() {
 
 <template>
   <div @keyup.enter="login" class="flex flex-col max-w-sm gap-y-6 mx-auto h-dvh justify-center">
+    <DangerAlert v-if="showLoginError">Неверные учетные данные</DangerAlert>
     <InputField
       id="username"
       :errors="errors.username ? [errors.username] : []"

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import { type UserType } from '@/types/userType.ts'
+import { type User } from '@/types/User.ts'
 import apiClient from '@/services/api.ts'
 
 export const useUser = defineStore('user', {
@@ -19,7 +19,7 @@ export const useUser = defineStore('user', {
       is_active: false,
       is_staff: false,
       is_superuser: false,
-    } as UserType,
+    } as User,
   }),
   actions: {
     getUserDataFromStorage() {
@@ -73,24 +73,6 @@ export const useUser = defineStore('user', {
 
       apiClient.defaults.headers.common['Authorization'] = ''
       this.router.push({ name: 'login' })
-    },
-
-    async refreshToken(f: Function, ...params: any[]) {
-      try {
-        const response = await apiClient.post('/token/refresh/', {
-          refresh: this.user.refreshToken,
-        })
-
-        localStorage.setItem('accessToken', response.data?.access)
-        this.user.accessToken = response.data?.access
-
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data?.access}`
-
-        f(...params)
-      } catch (error) {
-        console.error(error)
-        this.removeUserData()
-      }
     },
 
     async getMyData() {
