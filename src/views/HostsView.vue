@@ -8,6 +8,7 @@ import MainButton from '@/components/UI/MainButton.vue'
 import InputField from '@/components/UI/InputField.vue'
 import SelectField from '@/components/UI/SelectField.vue'
 import { AxiosError } from 'axios'
+import type { DataTableAction } from '@/types/DataTableAction.ts'
 
 const osTypes = ref([
   { value: 'linux', label: 'Linux' },
@@ -22,6 +23,17 @@ const newHost = ref<Omit<Host, 'id'>>({
   ip: '',
 })
 const errors = ref<ErrorHosts>({})
+const actions = ref<DataTableAction[]>([
+  {label: 'Удалить', action: deleteHost}
+])
+
+async function deleteHost(id: number | string) {
+  const response = await apiClient.delete(`/host/${id}/`)
+  if (response.status === 204) {
+    const idx = hosts.value.findIndex(host => host.id === id)
+    hosts.value.splice(idx, 1)
+  }
+}
 
 function clearCreateForm() {
   newHost.value.name = ''
@@ -65,7 +77,7 @@ onMounted(() => {
     <MainButton class="mx-6" @click="showCreateHostModal = true"
       >Добавить</MainButton
     >
-    <DataTable class="px-6 py-2" :columns :rows="hosts" />
+    <DataTable class="px-6 py-2" :columns :rows="hosts" :actions/>
     <Modal v-model="showCreateHostModal">
       <template #title> Создать новый хост </template>
       <template #body>

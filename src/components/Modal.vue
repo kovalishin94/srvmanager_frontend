@@ -70,5 +70,5 @@ const emit = defineEmits<{
       </div>
     </div>
   </div>
-  </Transition>>
+  </Transition>
 </template>
