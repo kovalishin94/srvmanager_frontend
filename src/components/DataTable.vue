@@ -55,7 +55,11 @@ onBeforeUnmount(() => {
           @contextmenu.prevent="rightClick($event, row.id)"
           @click.stop="rightClick($event, row.id)"
         >
-          <td class="px-6 py-4" v-for="cell in Object.values(row)">{{ cell }}</td>
+          <template v-for="(value, key) in row" :key="key">
+            <slot name="cell" :col="key" :value="value">
+              <td class="px-6 py-4" >{{ value }}</td>
+            </slot>
+          </template>
         </tr>
       </tbody>
       <tbody v-else>

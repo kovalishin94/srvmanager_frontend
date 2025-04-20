@@ -9,6 +9,7 @@ import NavbarMenuButton from '@/components/Navbar/NavbarMenuButton.vue'
 import NavbarDropdownMenuButton from '@/components/Navbar/NavbarDropdownMenuButton.vue'
 import HostIcon from '@/components/UI/Icons/HostIcon.vue'
 import ThemeIcon from '@/components/UI/Icons/ThemeIcon.vue'
+import TransparentButton from '@/components/UI/Buttons/TransparentButton.vue'
 
 const userStore = useUser()
 
@@ -20,23 +21,17 @@ onMounted(() => {
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900 h-18">
     <div class="flex items-center p-4">
-      <button
-        type="button"
-        class="cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+      <TransparentButton
         aria-expanded="false"
         data-drawer-target="main-sidebar"
         data-drawer-show="main-sidebar"
         aria-controls="main-sidebar"
       >
-        <span class="sr-only">Open main menu</span>
         <MenuIcon />
-      </button>
-      <button
-        class="ml-auto cursor-pointer inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-        @click="userStore.toggleTheme"
-      >
-        <ThemeIcon/>
-      </button>
+      </TransparentButton>
+      <TransparentButton class="ml-auto" @click="userStore.toggleTheme">
+        <ThemeIcon />
+      </TransparentButton>
     </div>
   </nav>
   <div

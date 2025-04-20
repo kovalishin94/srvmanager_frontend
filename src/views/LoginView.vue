@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import apiClient from '@/services/api.ts'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/UI/InputField.vue'
-import MainButton from '@/components/UI/MainButton.vue'
+import MainButton from '@/components/UI/Buttons/MainButton.vue'
 import { AxiosError } from 'axios'
 import DangerAlert from '@/components/UI/DangerAlert.vue'
 
