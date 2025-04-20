@@ -2,7 +2,7 @@
 
 <template>
   <svg
-    class="w-8 h-8"
+    class="w-6 h-6"
     viewBox="0 -0.04 71.723 71.723"
     xmlns="http://www.w3.org/2000/svg"
   >

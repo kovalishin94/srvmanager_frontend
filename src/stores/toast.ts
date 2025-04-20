@@ -9,7 +9,7 @@ export const useToast = defineStore('toast', {
     addToast(
       message: string,
       type: 'success' | 'warning' | 'danger',
-      duration: number = 3000,
+      duration: number = 5000,
     ): void {
       const id = crypto.randomUUID()
       this.toasts.push({ id, message, type, duration })
@@ -18,5 +18,8 @@ export const useToast = defineStore('toast', {
         this.toasts.splice(this.toasts.findIndex(item => item.id = id), 1)
       }, duration)
     },
+    defaultSuccess() {
+      this.addToast('Действие успешно выполнено', 'success')
+    }
   },
 })
