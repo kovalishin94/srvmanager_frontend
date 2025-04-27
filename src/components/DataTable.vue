@@ -42,30 +42,34 @@ onBeforeUnmount(() => {
 <template>
   <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-      <thead class="text-center text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+      <thead
+        class="text-center text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+      >
         <tr>
           <th scope="col" class="px-6 py-3" v-for="column in columns">{{ column }}</th>
         </tr>
       </thead>
       <tbody v-if="rows.length">
-        <tr
-          class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 text-center hover:bg-gray-50 dark:hover:bg-gray-600"
-          v-for="row in rows"
-          :key="row.id"
-          @contextmenu.prevent="rightClick($event, row.id)"
-        >
-          <template v-for="(value, key) in row" :key="key">
-            <slot name="cell" :col="key" :value="value">
-              <td class="px-6 py-4" >{{ value }}</td>
-            </slot>
-          </template>
-        </tr>
+        <template v-for="row in rows" :key="row.id">
+            <tr
+              class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 text-center hover:bg-gray-50 dark:hover:bg-gray-600"
+              @contextmenu.prevent="rightClick($event, row.id)"
+            >
+              <template v-for="(value, key) in row" :key="key">
+                <slot name="cell" :col="key" :value="value">
+                  <td class="px-6 py-4">{{ value }}</td>
+                </slot>
+              </template>
+            </tr>
+        </template>
       </tbody>
       <tbody v-else>
         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
           <td
             @contextmenu.prevent="rightClick($event, 0)"
-            :colspan="columns.length" class="px-6 py-4 text-xl text-center">
+            :colspan="columns.length"
+            class="px-6 py-4 text-xl text-center"
+          >
             Нет данных для отображения
           </td>
         </tr>

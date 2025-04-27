@@ -2,7 +2,7 @@
 import { RouterView, useRoute } from 'vue-router'
 import { useUser } from '@/stores/user.ts'
 import Navbar from '@/components/Navbar/Navbar.vue'
-import Toast from '@/components/Toast.vue'
+import TheToast from '@/components/TheToast.vue'
 
 const route = useRoute()
 const userStore = useUser()
@@ -13,5 +13,5 @@ userStore.initUser()
 <template>
   <Navbar v-if="route.name !== 'login'"/>
   <RouterView class="pt-14"/>
-  <Toast/>
+  <TheToast/>
 </template>

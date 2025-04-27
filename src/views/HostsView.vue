@@ -2,19 +2,12 @@
 import { onMounted, ref, watchEffect } from 'vue'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
-import type { Host, ErrorHosts } from '@/types/Host.ts'
+import type { Host, NewHost, ErrorHosts } from '@/types/Host.ts'
 import Modal from '@/components/Modal.vue'
-import MainButton from '@/components/UI/Buttons/MainButton.vue'
 import InputField from '@/components/UI/InputField.vue'
 import { AxiosError } from 'axios'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
-import LinuxIcon from '@/components/UI/Icons/LinuxIcon.vue'
-import WindowsIcon from '@/components/UI/Icons/WindowsIcon.vue'
-import TransparentButton from '@/components/UI/Buttons/TransparentButton.vue'
-import DangerButton from '@/components/UI/Buttons/DangerButton.vue'
-import SecondaryButton from '@/components/UI/Buttons/SecondaryButton.vue'
 import { useToast } from '@/stores/toast.ts'
-
 
 const toastStore = useToast()
 const showCreateModal = ref(false)
@@ -23,10 +16,12 @@ const showEditModal = ref(false)
 const currentHost = ref<Host | null>()
 const columns = ref<Array<string>>(['Id', 'Имя', 'IP адрес', 'Операционная система'])
 const hosts = ref<Array<Host>>([])
-const newHost = ref<Omit<Host, 'id'>>({
+const newHost = ref<NewHost>({
   name: '',
   os: 'linux',
   ip: '',
+  ssh_credentials_ids: [],
+  winrm_credentials_ids: []
 })
 const errors = ref<ErrorHosts>({})
 const actions = ref<DataTableAction[]>([
@@ -41,7 +36,7 @@ function askDelete(id: number | string) {
 }
 
 function askEdit(id: number | string) {
-  currentHost.value = {...hosts.value.find((host) => host.id === id)!}
+  currentHost.value = { ...hosts.value.find((host) => host.id === id)! }
   showEditModal.value = true
 }
 
@@ -64,11 +59,10 @@ async function getHosts() {
 
 async function createHost() {
   try {
-    const {data} = await apiClient.post('/host/', newHost.value)
+    const { data } = await apiClient.post('/host/', newHost.value)
     hosts.value.push(data)
     showCreateModal.value = false
     toastStore.defaultSuccess()
-
   } catch (error) {
     if (error instanceof AxiosError) {
       if (error.status === 400) {
@@ -82,7 +76,7 @@ async function updateHost() {
   if (!currentHost.value) return
   try {
     const { data } = await apiClient.put(`/host/${currentHost.value.id}/`, currentHost.value)
-    hosts.value = hosts.value.map(el => el.id === data.id ? data : el)
+    hosts.value = hosts.value.map((el) => (el.id === data.id ? data : el))
     showEditModal.value = false
     toastStore.defaultSuccess()
   } catch (error) {
@@ -121,7 +115,10 @@ onMounted(() => {
       :actions="hosts.length ? actions : actions.filter((el) => el.label === 'Создать')"
     >
       <template #cell="{ col, value }">
-        <td class="px-6 py-4">
+        <td
+          class="px-6 py-4"
+          v-if="!['ssh_credentials', 'winrm_credentials'].includes(String(col))"
+        >
           <strong v-if="col === 'id'">{{ value }}</strong>
           <div class="inline-flex justify-center" v-else-if="col === 'os'">
             <LinuxIcon v-if="value === 'linux'" />
@@ -129,93 +126,96 @@ onMounted(() => {
           </div>
           <span v-else>{{ value }}</span>
         </td>
+        <div class="hidden" v-else></div>
       </template>
     </DataTable>
-    <!--  Modal: Создать хост   -->
-    <Modal v-model="showCreateModal">
-      <template #title> Создать новый хост </template>
-      <template #body>
-        <div class="flex flex-col gap-y-3 px-12">
-          <InputField
-            id="host-name"
-            v-model.trim="newHost.name"
-            placeholder="Имя хоста"
-            :errors="errors.name"
-          />
-          <InputField
-            id="host-ip"
-            v-model.trim="newHost.ip"
-            placeholder="IP адрес"
-            :errors="errors.ip"
-          />
-          <div class="flex gap-x-2 items-center">
-            <span class="font-semibold text-gray-500 dark:text-gray-400">Тип ос: </span>
-            <TransparentButton
-              :class="{ 'bg-gray-200 dark:bg-gray-500': newHost.os === 'linux' }"
-              @click="newHost.os = 'linux'"
-            >
-              <LinuxIcon />
-            </TransparentButton>
-            <TransparentButton
-              @click="newHost.os = 'windows'"
-              :class="{ 'bg-gray-200 dark:bg-gray-500': newHost.os === 'windows' }"
-            >
-              <WindowsIcon />
-            </TransparentButton>
+    <Teleport to="body">
+      <!--  Modal: Создать хост   -->
+      <Modal v-model="showCreateModal">
+        <template #title> Создать новый хост </template>
+        <template #body>
+          <div class="flex flex-col gap-y-3 px-12">
+            <InputField
+              id="host-name"
+              v-model.trim="newHost.name"
+              placeholder="Имя хоста"
+              :errors="errors.name"
+            />
+            <InputField
+              id="host-ip"
+              v-model.trim="newHost.ip"
+              placeholder="IP адрес"
+              :errors="errors.ip"
+            />
+            <div class="flex gap-x-2 items-center">
+              <span class="font-semibold text-gray-500 dark:text-gray-400">Тип ос: </span>
+              <TransparentButton
+                :class="{ 'bg-gray-200 dark:bg-gray-500': newHost.os === 'linux' }"
+                @click="newHost.os = 'linux'"
+              >
+                <LinuxIcon />
+              </TransparentButton>
+              <TransparentButton
+                @click="newHost.os = 'windows'"
+                :class="{ 'bg-gray-200 dark:bg-gray-500': newHost.os === 'windows' }"
+              >
+                <WindowsIcon />
+              </TransparentButton>
+            </div>
           </div>
-        </div>
-      </template>
-      <template #footer>
-        <MainButton @click="createHost">Сохранить</MainButton>
-      </template>
-    </Modal>
-    <!--  Modal: Редактировать хост  -->
-    <Modal v-model="showEditModal">
-      <template #title> Редактирование хоста </template>
-      <template #body>
-        <div class="flex flex-col gap-y-3 px-12" v-if="currentHost">
-          <InputField
-            id="host-name"
-            v-model.trim="currentHost.name"
-            placeholder="Имя хоста"
-            :errors="errors.name"
-          />
-          <InputField
-            id="host-ip"
-            v-model.trim="currentHost.ip"
-            placeholder="IP адрес"
-            :errors="errors.ip"
-          />
-          <div class="flex gap-x-2 items-center">
-            <span class="font-semibold text-gray-500 dark:text-gray-400">Тип ос: </span>
-            <TransparentButton
-              :class="{ 'bg-gray-200 dark:bg-gray-500': currentHost.os === 'linux' }"
-              @click="currentHost.os = 'linux'"
-            >
-              <LinuxIcon />
-            </TransparentButton>
-            <TransparentButton
-              @click="currentHost.os = 'windows'"
-              :class="{ 'bg-gray-200 dark:bg-gray-500': currentHost.os === 'windows' }"
-            >
-              <WindowsIcon />
-            </TransparentButton>
+        </template>
+        <template #footer>
+          <MainButton @click="createHost">Сохранить</MainButton>
+        </template>
+      </Modal>
+      <!--  Modal: Редактировать хост  -->
+      <Modal v-model="showEditModal">
+        <template #title> Редактирование хоста </template>
+        <template #body>
+          <div class="flex flex-col gap-y-3 px-12" v-if="currentHost">
+            <InputField
+              id="host-name"
+              v-model.trim="currentHost.name"
+              placeholder="Имя хоста"
+              :errors="errors.name"
+            />
+            <InputField
+              id="host-ip"
+              v-model.trim="currentHost.ip"
+              placeholder="IP адрес"
+              :errors="errors.ip"
+            />
+            <div class="flex gap-x-2 items-center">
+              <span class="font-semibold text-gray-500 dark:text-gray-400">Тип ос: </span>
+              <TransparentButton
+                :class="{ 'bg-gray-200 dark:bg-gray-500': currentHost.os === 'linux' }"
+                @click="currentHost.os = 'linux'"
+              >
+                <LinuxIcon />
+              </TransparentButton>
+              <TransparentButton
+                @click="currentHost.os = 'windows'"
+                :class="{ 'bg-gray-200 dark:bg-gray-500': currentHost.os === 'windows' }"
+              >
+                <WindowsIcon />
+              </TransparentButton>
+            </div>
           </div>
-        </div>
-      </template>
-      <template #footer>
-        <MainButton @click="updateHost">Сохранить</MainButton>
-      </template>
-    </Modal>
-    <!--  Modal: Удалить хост  -->
-    <Modal v-model="showDeleteModal" :type="'delete'">
-      <template #body>
-        Вы действительно хотите удалить хост <strong>"{{ currentHost?.name }}"?</strong>
-      </template>
-      <template #footer>
-        <DangerButton @click="deleteHost">Удалить</DangerButton>
-        <SecondaryButton @click="showDeleteModal = false">Отмена</SecondaryButton>
-      </template>
-    </Modal>
+        </template>
+        <template #footer>
+          <MainButton @click="updateHost">Сохранить</MainButton>
+        </template>
+      </Modal>
+      <!--  Modal: Удалить хост  -->
+      <Modal v-model="showDeleteModal" :type="'delete'">
+        <template #body>
+          Вы действительно хотите удалить хост <strong>"{{ currentHost?.name }}"?</strong>
+        </template>
+        <template #footer>
+          <DangerButton @click="deleteHost">Удалить</DangerButton>
+          <SecondaryButton @click="showDeleteModal = false">Отмена</SecondaryButton>
+        </template>
+      </Modal>
+    </Teleport>
   </div>
 </template>

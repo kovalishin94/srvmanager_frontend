@@ -6,7 +6,7 @@ interface Props {
   label?: string
   required?: boolean
   placeholder?: string
-  modelValue: string
+  modelValue: string | number
 }
 
 const {

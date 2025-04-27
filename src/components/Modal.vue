@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import CloseIcon from '@/components/UI/Icons/CloseIcon.vue'
-import AttentionIcon from '@/components/UI/Icons/AttentionIcon.vue'
-
 const { modelValue, type = 'default' } = defineProps<{
   modelValue: boolean
   type?: 'default' | 'delete'

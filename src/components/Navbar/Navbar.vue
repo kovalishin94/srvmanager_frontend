@@ -2,14 +2,8 @@
 import { initFlowbite } from 'flowbite'
 import { onMounted } from 'vue'
 import { useUser } from '@/stores/user.ts'
-import MenuIcon from '@/components/UI/Icons/MenuIcon.vue'
-import CloseIcon from '@/components/UI/Icons/CloseIcon.vue'
-import ExitIcon from '@/components/UI/Icons/ExitIcon.vue'
 import NavbarMenuButton from '@/components/Navbar/NavbarMenuButton.vue'
 import NavbarDropdownMenuButton from '@/components/Navbar/NavbarDropdownMenuButton.vue'
-import HostIcon from '@/components/UI/Icons/HostIcon.vue'
-import ThemeIcon from '@/components/UI/Icons/ThemeIcon.vue'
-import TransparentButton from '@/components/UI/Buttons/TransparentButton.vue'
 
 const userStore = useUser()
 
@@ -57,8 +51,11 @@ onMounted(() => {
     </button>
     <div class="py-4 overflow-y-auto">
       <ul class="space-y-2 font-medium">
-        <NavbarMenuButton name="Хосты" is_link link="hosts">
+        <NavbarMenuButton name="Хосты" is_link link="hosts" data-drawer-hide="main-sidebar">
           <HostIcon />
+        </NavbarMenuButton>
+        <NavbarMenuButton name="Учетные записи" is_link link="credentials" data-drawer-hide="main-sidebar">
+          <FingerprintIcon />
         </NavbarMenuButton>
         <NavbarDropdownMenuButton />
         <NavbarMenuButton

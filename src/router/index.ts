@@ -4,6 +4,7 @@ import LoginView from '@/views/LoginView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import ForbiddenView from '@/views/ForbiddenView.vue'
 import { useUser } from '@/stores/user.ts'
+import CredentialView from '@/views/CredentialView.vue'
 
 
 const router = createRouter({
@@ -34,6 +35,14 @@ const router = createRouter({
       path: '/hosts',
       name: 'hosts',
       component: HostsView,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/credentials',
+      name: 'credentials',
+      component: CredentialView,
       meta: {
         requiresAuth: true
       }
