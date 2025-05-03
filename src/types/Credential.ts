@@ -39,3 +39,8 @@ export interface ErrorSSHCredentials extends ErrorCredentials {
   ssh_key?: Array<string>
   passphrase?: Array<string>
 }
+
+export interface ErrorWinRMCredentials extends ErrorCredentials {
+  port?: Array<string>
+  ssl?: Array<string>
+}

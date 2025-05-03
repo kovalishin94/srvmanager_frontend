@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
 import type { Host, NewHost, ErrorHosts } from '@/types/Host.ts'
@@ -8,20 +8,22 @@ import InputField from '@/components/UI/InputField.vue'
 import { AxiosError } from 'axios'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
 import { useToast } from '@/stores/toast.ts'
+import type { SSHCredential } from '@/types/Credential.ts'
+import SelectField from '@/components/UI/SelectField.vue'
 
 const toastStore = useToast()
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const showEditModal = ref(false)
-const currentHost = ref<Host | null>()
+const currentHost = ref<Host | undefined>()
 const columns = ref<Array<string>>(['Id', 'Имя', 'IP адрес', 'Операционная система'])
 const hosts = ref<Array<Host>>([])
 const newHost = ref<NewHost>({
   name: '',
   os: 'linux',
   ip: '',
-  ssh_credentials_ids: [],
-  winrm_credentials_ids: []
+  ssh_credentials: [],
+  winrm_credentials: [],
 })
 const errors = ref<ErrorHosts>({})
 const actions = ref<DataTableAction[]>([
@@ -29,6 +31,7 @@ const actions = ref<DataTableAction[]>([
   { label: 'Удалить', action: askDelete },
   { label: 'Редактировать', action: askEdit },
 ])
+const sshCredentials = ref<SSHCredential[]>([])
 
 function askDelete(id: number | string) {
   currentHost.value = hosts.value.find((host) => host.id === id)
@@ -47,7 +50,7 @@ async function deleteHost() {
     const idx = hosts.value.findIndex((host) => host.id === currentHost.value?.id)
     hosts.value.splice(idx, 1)
     showDeleteModal.value = false
-    currentHost.value = null
+    currentHost.value = undefined
     toastStore.defaultSuccess()
   }
 }
@@ -88,20 +91,37 @@ async function updateHost() {
   }
 }
 
-watchEffect(() => {
-  if (!showCreateModal.value) {
-    newHost.value.name = ''
-    newHost.value.os = 'linux'
-    newHost.value.ip = ''
+async function getSSHCredentials() {
+  const { data } = await apiClient.get('/ssh-credential/')
+  sshCredentials.value = data
+}
+
+const sshOptions = computed(() => {
+  return sshCredentials.value.map(({ id, username }) => ({ label: `${id}_${username}`, value: id }))
+})
+
+watch( showCreateModal, (newValue: boolean) => {
+  if (!newValue) {
+    newHost.value = {
+      name: '',
+      os: 'linux',
+      ip: '',
+      ssh_credentials: [],
+      winrm_credentials: [],
+    }
     errors.value = {}
   }
-  if (!showEditModal.value) {
+})
+
+watch( showEditModal, (newValue: boolean) => {
+  if (!newValue) {
     errors.value = {}
   }
 })
 
 onMounted(() => {
   getHosts()
+  getSSHCredentials()
 })
 </script>
 
@@ -162,6 +182,12 @@ onMounted(() => {
                 <WindowsIcon />
               </TransparentButton>
             </div>
+
+            <SelectField
+              :options="sshOptions"
+              v-model.number="newHost.ssh_credentials[0]"
+              placeholder="Учетная запись SSH"
+            />
           </div>
         </template>
         <template #footer>
@@ -207,7 +233,7 @@ onMounted(() => {
         </template>
       </Modal>
       <!--  Modal: Удалить хост  -->
-      <Modal v-model="showDeleteModal" :type="'delete'">
+      <Modal v-model="showDeleteModal" :type="'delete'" size="max-w-md">
         <template #body>
           Вы действительно хотите удалить хост <strong>"{{ currentHost?.name }}"?</strong>
         </template>

@@ -1,29 +1,30 @@
 <script setup lang="ts">
-import { type Component, markRaw, ref } from 'vue'
-import TheSSHCredentials from '@/components/TheSSHCredentials.vue'
-import TheWinrmCredentials from '@/components/TheWinrmCredentials.vue'
+import { ref, watch } from 'vue'
 import Tabs from '@/components/UI/Tabs.vue'
+import { useRoute, useRouter } from 'vue-router'
 
 type CredentialType = 'ssh' | 'winrm'
 
-const currentCredentialType = ref<CredentialType>('ssh')
-const credentialTabs = markRaw<Record<CredentialType, Component>>({
-  ssh: TheSSHCredentials,
-  winrm: TheWinrmCredentials,
-})
+const route = useRoute()
+const router = useRouter()
 
+const current = ref<CredentialType>((route.path.split('/').pop() as CredentialType) || 'ssh')
+
+watch(current, (newValue: CredentialType) => {
+  router.push(`/credentials/${newValue}`)
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-y-5">
     <Tabs
-      class="mx-20"
-      v-model="currentCredentialType"
+      class="mx-18"
+      v-model="current"
       :tabs="[
-      { label: 'Учетные записи SSH', value: 'ssh' },
-      { label: 'Учетные записи WinRM', value: 'winrm' },
-    ]"
+        { label: 'Учетные записи SSH', value: 'ssh' },
+        { label: 'Учетные записи WinRM', value: 'winrm' },
+      ]"
     />
-    <component :is="credentialTabs[currentCredentialType]" />
+    <router-view />
   </div>
 </template>
