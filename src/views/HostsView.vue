@@ -8,7 +8,7 @@ import InputField from '@/components/UI/InputField.vue'
 import { AxiosError } from 'axios'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
 import { useToast } from '@/stores/toast.ts'
-import type { SSHCredential } from '@/types/Credential.ts'
+import type { SSHCredential, WinRMCredential } from '@/types/Credential.ts'
 import SelectField from '@/components/UI/SelectField.vue'
 
 const toastStore = useToast()
@@ -32,6 +32,7 @@ const actions = ref<DataTableAction[]>([
   { label: 'Редактировать', action: askEdit },
 ])
 const sshCredentials = ref<SSHCredential[]>([])
+const winrmCredentials = ref<WinRMCredential[]>([])
 
 function askDelete(id: number | string) {
   currentHost.value = hosts.value.find((host) => host.id === id)
@@ -61,6 +62,8 @@ async function getHosts() {
 }
 
 async function createHost() {
+  if ( newHost.value.ssh_credentials.includes('')) newHost.value.ssh_credentials = []
+  if ( newHost.value.winrm_credentials.includes('')) newHost.value.winrm_credentials = []
   try {
     const { data } = await apiClient.post('/host/', newHost.value)
     hosts.value.push(data)
@@ -77,6 +80,8 @@ async function createHost() {
 
 async function updateHost() {
   if (!currentHost.value) return
+  if ( currentHost.value.ssh_credentials.includes('')) currentHost.value.ssh_credentials = []
+  if ( currentHost.value.winrm_credentials.includes('')) currentHost.value.winrm_credentials = []
   try {
     const { data } = await apiClient.put(`/host/${currentHost.value.id}/`, currentHost.value)
     hosts.value = hosts.value.map((el) => (el.id === data.id ? data : el))
@@ -96,8 +101,17 @@ async function getSSHCredentials() {
   sshCredentials.value = data
 }
 
+async function getWinRMCredentials() {
+  const { data } = await apiClient.get('/winrm-credential/')
+  winrmCredentials.value = data
+}
+
 const sshOptions = computed(() => {
   return sshCredentials.value.map(({ id, username }) => ({ label: `${id}_${username}`, value: id }))
+})
+
+const winrmOptions = computed(() => {
+  return winrmCredentials.value.map(({ id, username }) => ({ label: `${id}_${username}`, value: id }))
 })
 
 watch( showCreateModal, (newValue: boolean) => {
@@ -122,6 +136,7 @@ watch( showEditModal, (newValue: boolean) => {
 onMounted(() => {
   getHosts()
   getSSHCredentials()
+  getWinRMCredentials()
 })
 </script>
 
@@ -182,11 +197,15 @@ onMounted(() => {
                 <WindowsIcon />
               </TransparentButton>
             </div>
-
             <SelectField
               :options="sshOptions"
               v-model.number="newHost.ssh_credentials[0]"
-              placeholder="Учетная запись SSH"
+              placeholder="Учетная запись SSH не выбрана"
+            />
+            <SelectField
+              :options="winrmOptions"
+              v-model.number="newHost.winrm_credentials[0]"
+              placeholder="Учетная запись WinRM не выбрана"
             />
           </div>
         </template>
@@ -226,6 +245,16 @@ onMounted(() => {
                 <WindowsIcon />
               </TransparentButton>
             </div>
+            <SelectField
+              :options="sshOptions"
+              v-model.number="currentHost.ssh_credentials[0]"
+              placeholder="Учетная запись SSH не выбрана"
+            />
+            <SelectField
+              :options="winrmOptions"
+              v-model.number="currentHost.winrm_credentials[0]"
+              placeholder="Учетная запись WinRM не выбрана"
+            />
           </div>
         </template>
         <template #footer>

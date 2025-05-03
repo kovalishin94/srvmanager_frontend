@@ -3,16 +3,16 @@ export interface Host {
   name: string
   ip: string
   os: string
-  ssh_credentials: Array<number>
-  winrm_credentials: Array<number>
+  ssh_credentials: Array<number | string>
+  winrm_credentials: Array<number | string>
 }
 
 export interface NewHost {
   name: string
   ip: string
   os: string
-  ssh_credentials: Array<number>
-  winrm_credentials: Array<number>
+  ssh_credentials: Array<number | string>
+  winrm_credentials: Array<number | string>
 }
 
 export interface ErrorHosts {
