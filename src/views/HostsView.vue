@@ -10,13 +10,20 @@ import type { DataTableAction } from '@/types/DataTableAction.ts'
 import { useToast } from '@/stores/toast.ts'
 import type { SSHCredential, WinRMCredential } from '@/types/Credential.ts'
 import SelectField from '@/components/UI/SelectField.vue'
+import Popover from '@/components/UI/Popover.vue'
 
 const toastStore = useToast()
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const showEditModal = ref(false)
 const currentHost = ref<Host | undefined>()
-const columns = ref<Array<string>>(['Id', 'Имя', 'IP адрес', 'Операционная система'])
+const columns = ref<Array<string>>([
+  'Id',
+  'Имя',
+  'IP адрес',
+  'Операционная система',
+  'Учетные записи',
+])
 const hosts = ref<Array<Host>>([])
 const newHost = ref<NewHost>({
   name: '',
@@ -62,8 +69,8 @@ async function getHosts() {
 }
 
 async function createHost() {
-  if ( newHost.value.ssh_credentials.includes('')) newHost.value.ssh_credentials = []
-  if ( newHost.value.winrm_credentials.includes('')) newHost.value.winrm_credentials = []
+  if (newHost.value.ssh_credentials.includes('')) newHost.value.ssh_credentials = []
+  if (newHost.value.winrm_credentials.includes('')) newHost.value.winrm_credentials = []
   try {
     const { data } = await apiClient.post('/host/', newHost.value)
     hosts.value.push(data)
@@ -80,8 +87,8 @@ async function createHost() {
 
 async function updateHost() {
   if (!currentHost.value) return
-  if ( currentHost.value.ssh_credentials.includes('')) currentHost.value.ssh_credentials = []
-  if ( currentHost.value.winrm_credentials.includes('')) currentHost.value.winrm_credentials = []
+  if (currentHost.value.ssh_credentials.includes('')) currentHost.value.ssh_credentials = []
+  if (currentHost.value.winrm_credentials.includes('')) currentHost.value.winrm_credentials = []
   try {
     const { data } = await apiClient.put(`/host/${currentHost.value.id}/`, currentHost.value)
     hosts.value = hosts.value.map((el) => (el.id === data.id ? data : el))
@@ -111,10 +118,23 @@ const sshOptions = computed(() => {
 })
 
 const winrmOptions = computed(() => {
-  return winrmCredentials.value.map(({ id, username }) => ({ label: `${id}_${username}`, value: id }))
+  return winrmCredentials.value.map(({ id, username }) => ({
+    label: `${id}_${username}`,
+    value: id,
+  }))
 })
 
-watch( showCreateModal, (newValue: boolean) => {
+function findSSHCredential(id: number) {
+  const credential = sshCredentials.value.find((el) => el.id === id)
+  return credential ? `${credential.id}_${credential.username}` : ''
+}
+
+function findWinRMCredential(id: number) {
+  const credential = winrmCredentials.value.find((el) => el.id === id)
+  return credential ? `${credential.id}_${credential.username}` : ''
+}
+
+watch(showCreateModal, (newValue: boolean) => {
   if (!newValue) {
     newHost.value = {
       name: '',
@@ -127,7 +147,7 @@ watch( showCreateModal, (newValue: boolean) => {
   }
 })
 
-watch( showEditModal, (newValue: boolean) => {
+watch(showEditModal, (newValue: boolean) => {
   if (!newValue) {
     errors.value = {}
   }
@@ -150,10 +170,21 @@ onMounted(() => {
       :actions="hosts.length ? actions : actions.filter((el) => el.label === 'Создать')"
     >
       <template #cell="{ col, value }">
-        <td
-          class="px-6 py-4"
-          v-if="!['ssh_credentials', 'winrm_credentials'].includes(String(col))"
-        >
+        <td class="px-6 py-4" colspan="1" v-if="col === 'ssh_credentials'">
+          <Popover v-if="value.length">
+            <template #object><SecretIcon /></template>
+            <template #title>SSH</template>
+            <template #body>{{ findSSHCredential(value[0]) }}</template>
+          </Popover>
+        </td>
+        <td class="px-6 py-4" colspan="1" v-else-if="col === 'winrm_credentials'">
+          <Popover v-if="value.length">
+            <template #object><SecretIcon /></template>
+            <template #title>WinRM</template>
+            <template #body>{{ findWinRMCredential(value[0]) }}</template>
+          </Popover>
+        </td>
+        <td v-else class="px-6 py-4" colspan="2">
           <strong v-if="col === 'id'">{{ value }}</strong>
           <div class="inline-flex justify-center" v-else-if="col === 'os'">
             <LinuxIcon v-if="value === 'linux'" />
@@ -161,7 +192,6 @@ onMounted(() => {
           </div>
           <span v-else>{{ value }}</span>
         </td>
-        <div class="hidden" v-else></div>
       </template>
     </DataTable>
     <Teleport to="body">

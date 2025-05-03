@@ -46,7 +46,7 @@ onBeforeUnmount(() => {
         class="text-center text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
       >
         <tr>
-          <th scope="col" class="px-6 py-3" v-for="column in columns">{{ column }}</th>
+          <th colspan="2" scope="col" class="px-6 py-3" v-for="column in columns">{{ column }}</th>
         </tr>
       </thead>
       <tbody v-if="rows.length">
@@ -57,7 +57,7 @@ onBeforeUnmount(() => {
             >
               <template v-for="(value, key) in row" :key="key">
                 <slot name="cell" :col="key" :value="value">
-                  <td class="px-6 py-4">{{ value }}</td>
+                  <td class="px-6 py-4" colspan="2">{{ value }}</td>
                 </slot>
               </template>
             </tr>
@@ -67,7 +67,7 @@ onBeforeUnmount(() => {
         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
           <td
             @contextmenu.prevent="rightClick($event, 0)"
-            :colspan="columns.length"
+            :colspan="columns.length*2"
             class="px-6 py-4 text-xl text-center"
           >
             Нет данных для отображения

@@ -86,7 +86,7 @@ watchEffect(() => {
   <DataTable class="px-6 py-2" :columns="['Id', 'Username', 'Port', 'SSL']" :rows="credentials" :actions>
     <template #cell="{ col, value }">
       <div class="hidden" v-if="col === 'host'"></div>
-      <td class="px-6 py-4" v-else>
+      <td class="px-6 py-4" colspan="2" v-else>
         <strong v-if="col === 'id'">{{ value }}</strong>
         <span v-else>{{ value }}</span>
       </td>
