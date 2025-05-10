@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
 
 type ObjectWithId = {
@@ -31,11 +31,9 @@ function onGlobalClick() {
   if (visible.value) visible.value = false
 }
 
-onMounted(() => {
-  window.addEventListener('click', onGlobalClick)
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('click', onGlobalClick)
+watch(visible, (value) => {
+  if (value) window.addEventListener('click', onGlobalClick)
+  else window.removeEventListener('click', onGlobalClick)
 })
 </script>
 

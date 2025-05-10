@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { initFlowbite } from 'flowbite'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useUser } from '@/stores/user.ts'
 import TheSidebar from '@/components/Navbar/TheSidebar.vue'
+import Logo from '@/components/UI/Icons/Logo.vue'
 
 const userStore = useUser()
 const showSidebar = ref(false)
 
-onMounted(() => {
-  initFlowbite()
-})
 </script>
 
 <template>
@@ -18,6 +15,7 @@ onMounted(() => {
       <TransparentButton @click.stop="showSidebar = true">
         <MenuIcon />
       </TransparentButton>
+      <Logo class="ml-2"/>
       <TransparentButton class="ml-auto" @click="userStore.toggleTheme">
         <ThemeIcon />
       </TransparentButton>

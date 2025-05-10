@@ -1,16 +1,37 @@
 <script setup lang="ts">
 import { useToast } from '@/stores/toast.ts'
 import ToastIcons from '@/components/UI/Icons/ToastIcons.vue'
+import { computed, ref } from 'vue'
 
 const toastStore = useToast()
+
+const leavingCount = ref(0)
+
+const showContainer = computed(
+  () => toastStore.toasts.length > 0 || leavingCount.value > 0
+)
+
+function onBeforeLeave() {
+  leavingCount.value++
+}
+function onAfterLeave() {
+  leavingCount.value--
+}
+
 </script>
 
 <template>
   <div
-    class="fixed flex flex-col items-center w-full max-w-xs p-4 space-y-4 text-gray-500 bg-white  rounded-lg shadow-sm right-5 bottom-5 dark:text-gray-400 dark:bg-gray-800"
+    v-show="showContainer"
+    class="fixed flex flex-col items-center w-full max-w-xs p-4 space-y-4 text-gray-500 bg-white rounded-lg shadow-sm right-5 bottom-5 dark:text-gray-400 dark:bg-gray-800"
     role="alert"
   >
-    <TransitionGroup name="toasts" tag="div">
+    <TransitionGroup
+      name="toasts"
+      tag="div"
+      @before-leave="onBeforeLeave"
+      @after-leave="onAfterLeave"
+    >
       <div
         v-for="toast in toastStore.toasts"
         :key="toast.id"

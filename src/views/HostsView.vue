@@ -47,7 +47,7 @@ function askDelete(id: number | string) {
 }
 
 function askEdit(id: number | string) {
-  currentHost.value = { ...hosts.value.find((host) => host.id === id)! }
+  currentHost.value = hosts.value.find((host) => host.id === id)
   showEditModal.value = true
 }
 
@@ -199,7 +199,7 @@ onMounted(() => {
     <Teleport to="body">
       <!--  Modal: Создать хост   -->
       <Modal v-model="showCreateModal">
-        <template #title> Создать новый хост </template>
+        <template #title>Создать новый хост</template>
         <template #body>
           <div class="flex flex-col gap-y-3 px-12">
             <InputField
