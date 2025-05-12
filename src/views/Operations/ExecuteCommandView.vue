@@ -186,13 +186,20 @@ onMounted(() => {
               :rows="hostsOptions"
               v-model="newExecuteCommand.hosts"
             />
-            <TextareaField
-              v-for="i in numberOfCommands"
-              :key="i"
-              v-model="newExecuteCommand.command[i - 1]"
-              :label="`Команда ${i}:`"
-              placeholder="Введите исполняемую команду"
-            />
+            <div class="flex flex-col" v-for="i in numberOfCommands" :key="i">
+              <div class="flex gap-x-2 items-center">
+                <TextareaField
+                  v-model="newExecuteCommand.command[i - 1]"
+                  placeholder="Введите исполняемую команду"
+                />
+                <DangerButton
+                  @click="newExecuteCommand.command.splice(i-1, 1); numberOfCommands--"
+                  v-if="numberOfCommands > 1"
+                  class="h-fit"
+                >Удалить</DangerButton>
+              </div>
+            </div>
+            <SecondaryButton @click="numberOfCommands++">Добавить команду</SecondaryButton>
             <SelectField
               :options="[
                 { label: 'SSH', value: 'ssh' },
@@ -245,7 +252,7 @@ onMounted(() => {
         <template #body>
           <div class="p-4 max-h-[calc(100vh-20rem)] overflow-y-scroll">
             <ol class="relative border-s border-gray-200 dark:border-gray-800">
-              <li class="ms-4" v-for="(std, timestamp) in {...currentExecuteCommand?.stdout }">
+              <li class="ms-4" v-for="(std, timestamp) in currentExecuteCommand?.stdout">
                 <div
                   class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-800"
                 ></div>
