@@ -2,8 +2,6 @@
 import NavbarMenuButton from '@/components/Navbar/NavbarMenuButton.vue'
 import NavbarDropdownMenuButton from '@/components/Navbar/NavbarDropdownMenuButton.vue'
 import { useUser } from '@/stores/user.ts'
-import { initDropdowns } from 'flowbite'
-import { onMounted } from 'vue'
 
 const userStore = useUser()
 const { modelValue } = defineProps<{
@@ -17,11 +15,6 @@ const emit = defineEmits<{
 function close() {
   emit('update:modelValue', false)
 }
-
-onMounted(() => {
-  initDropdowns()
-})
-
 </script>
 
 <template>
