@@ -1,41 +1,42 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
-import { useToast } from '@/stores/toast.ts'
+import { ref } from 'vue'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
-import type { ErrorWinRMCredentials, NewWinRMCredential, WinRMCredential } from '@/types/Credential.ts'
+import type {
+  ErrorWinRMCredentials,
+  NewWinRMCredential,
+  WinRMCredential,
+} from '@/types/Credential.ts'
 import apiClient from '@/services/api.ts'
 import { AxiosError } from 'axios'
 import DataTable from '@/components/DataTable.vue'
 import InputField from '@/components/UI/InputField.vue'
 import Modal from '@/components/Modal.vue'
 import Toggle from '@/components/UI/Toggle.vue'
+import { useItemsDefault } from '@/composables/items_default.ts'
 
-const toastStore = useToast()
+const {
+  items: credentials,
+  current: currentCredential,
+  newItem: newCredential,
+  errors,
+  showCreateModal,
+  showDeleteModal,
+  askDelete,
+  deleteItem: deleteCredential,
+  toastStore,
+} = useItemsDefault<WinRMCredential, NewWinRMCredential, ErrorWinRMCredentials>(
+  '/winrm-credential/',
+  {
+    username: '',
+    password: '',
+    port: 5985,
+    ssl: false,
+  },
+)
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
 ])
-const credentials = ref<Array<WinRMCredential>>([])
-const showCreateModal = ref(false)
-const showDeleteModal = ref(false)
-const newCredential = ref<NewWinRMCredential>({
-  username: '',
-  password: '',
-  port: 5985,
-  ssl: false,
-})
-const errors = ref<ErrorWinRMCredentials>({})
-const currentCredential = ref<WinRMCredential | undefined>()
-
-function askDelete(id: number | string) {
-  currentCredential.value = credentials.value.find((credential) => credential.id === id)
-  showDeleteModal.value = true
-}
-
-async function getCredentials() {
-  const { data } = await apiClient.get('/winrm-credential/')
-  credentials.value = data
-}
 
 async function createCredential() {
   try {
@@ -51,39 +52,15 @@ async function createCredential() {
     }
   }
 }
-
-async function deleteCredential() {
-  if (!currentCredential.value) return
-  const { status } = await apiClient.delete(`/winrm-credential/${currentCredential.value.id}/`)
-  if (status === 204) {
-    const idx = credentials.value.findIndex((credential) => credential.id === currentCredential.value?.id)
-    credentials.value.splice(idx, 1)
-    showDeleteModal.value = false
-    currentCredential.value = undefined
-    toastStore.defaultSuccess()
-  }
-}
-
-onMounted(() => {
-  getCredentials()
-})
-
-watchEffect(() => {
-  if (!showCreateModal.value) {
-    newCredential.value = {
-      username: '',
-      password: '',
-      port: 5985,
-      ssl: false,
-    }
-    errors.value = {}
-  }
-})
-
 </script>
 
 <template>
-  <DataTable class="px-6 py-2" :columns="['Id', 'Username', 'Port', 'SSL']" :rows="credentials" :actions>
+  <DataTable
+    class="px-6 py-2"
+    :columns="['Id', 'Username', 'Port', 'SSL']"
+    :rows="credentials"
+    :actions
+  >
     <template #cell="{ col, value }">
       <div class="hidden" v-if="col === 'host'"></div>
       <td class="px-6 py-4" colspan="2" v-else>
@@ -120,7 +97,9 @@ watchEffect(() => {
     </Modal>
     <Modal v-model="showDeleteModal" :type="'delete'" size="max-w-md">
       <template #body>
-        Вы действительно хотите удалить учетную запись <strong>"{{ currentCredential?.username }}"</strong> с id <strong>"{{ currentCredential?.id }}"?</strong>
+        Вы действительно хотите удалить учетную запись
+        <strong>"{{ currentCredential?.username }}"</strong> с id
+        <strong>"{{ currentCredential?.id }}"?</strong>
       </template>
       <template #footer>
         <DangerButton @click="deleteCredential">Удалить</DangerButton>
