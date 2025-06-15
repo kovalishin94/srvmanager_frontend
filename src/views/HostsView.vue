@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useItemsDefault } from '@/composables/items_default.ts'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
 import type { Host, NewHost, ErrorHosts } from '@/types/Host.ts'
@@ -7,16 +8,28 @@ import Modal from '@/components/Modal.vue'
 import InputField from '@/components/UI/InputField.vue'
 import { AxiosError } from 'axios'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
-import { useToast } from '@/stores/toast.ts'
 import type { SSHCredential, WinRMCredential } from '@/types/Credential.ts'
 import SelectField from '@/components/UI/SelectField.vue'
 import Popover from '@/components/UI/Popover.vue'
 
-const toastStore = useToast()
-const showCreateModal = ref(false)
-const showDeleteModal = ref(false)
+const {
+  items: hosts,
+  current: currentHost,
+  newItem: newHost,
+  errors,
+  showCreateModal,
+  showDeleteModal,
+  askDelete,
+  deleteItem: deleteHost,
+  toastStore
+} = useItemsDefault<Host, NewHost, ErrorHosts>('/host/', {
+  name: '',
+  os: 'linux',
+  ip: '',
+  ssh_credentials: [],
+  winrm_credentials: [],
+})
 const showEditModal = ref(false)
-const currentHost = ref<Host | undefined>()
 const columns = ref<Array<string>>([
   'Id',
   'Имя',
@@ -24,15 +37,6 @@ const columns = ref<Array<string>>([
   'Операционная система',
   'Учетные записи',
 ])
-const hosts = ref<Array<Host>>([])
-const newHost = ref<NewHost>({
-  name: '',
-  os: 'linux',
-  ip: '',
-  ssh_credentials: [],
-  winrm_credentials: [],
-})
-const errors = ref<ErrorHosts>({})
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
@@ -41,31 +45,9 @@ const actions = ref<DataTableAction[]>([
 const sshCredentials = ref<SSHCredential[]>([])
 const winrmCredentials = ref<WinRMCredential[]>([])
 
-function askDelete(id: number | string) {
-  currentHost.value = hosts.value.find((host) => host.id === id)
-  showDeleteModal.value = true
-}
-
 function askEdit(id: number | string) {
   currentHost.value = hosts.value.find((host) => host.id === id)
   showEditModal.value = true
-}
-
-async function deleteHost() {
-  if (!currentHost.value) return
-  const { status } = await apiClient.delete(`/host/${currentHost.value.id}/`)
-  if (status === 204) {
-    const idx = hosts.value.findIndex((host) => host.id === currentHost.value?.id)
-    hosts.value.splice(idx, 1)
-    showDeleteModal.value = false
-    currentHost.value = undefined
-    toastStore.defaultSuccess()
-  }
-}
-
-async function getHosts() {
-  const { data } = await apiClient.get('/host')
-  hosts.value = data
 }
 
 async function createHost() {
@@ -136,19 +118,6 @@ function findWinRMCredential(id: number) {
   return credential ? `${credential.id}_${credential.username}` : ''
 }
 
-watch(showCreateModal, (newValue: boolean) => {
-  if (!newValue) {
-    newHost.value = {
-      name: '',
-      os: 'linux',
-      ip: '',
-      ssh_credentials: [],
-      winrm_credentials: [],
-    }
-    errors.value = {}
-  }
-})
-
 watch(showEditModal, (newValue: boolean) => {
   if (!newValue) {
     errors.value = {}
@@ -156,7 +125,6 @@ watch(showEditModal, (newValue: boolean) => {
 })
 
 onMounted(() => {
-  getHosts()
   getSSHCredentials()
   getWinRMCredentials()
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, provide, onUnmounted } from 'vue'
 import type { ExecuteCommand, ExecuteCommandNew } from '@/types/Ops.ts'
 import apiClient from '@/services/api.ts'
 import { useToast } from '@/stores/toast.ts'
@@ -19,20 +19,30 @@ interface Errors {
   command?: string[]
 }
 
+interface Paginator {
+  count: number
+  next: number | null
+  previous: number | null
+  current: number
+  num_pages: number
+}
+
 const toastStore = useToast()
+const paginator = ref<Paginator>({} as Paginator)
+const pageSize = ref<number>(Number(localStorage.getItem('executeCommandPageSize')) || 10)
 const columns = ref<Record<string, keyof ExecuteCommand>>({
-  "Id": "id",
-  "Автор": "created_by",
-  "Статус": "status",
-  "Создана": "created_at",
-  "Время последнего изменения": "updated_at",
-  "Протокол": "protocol",
+  'Id': 'id',
+  'Автор': 'created_by',
+  'Статус': 'status',
+  'Создана': 'created_at',
+  'Время последнего изменения': 'updated_at',
+  'Протокол': 'protocol',
 })
 const actionList = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
   { label: 'Лог', action: showLog },
-  { label: 'Std', action: showStd }
+  { label: 'Std', action: showStd },
 ])
 const executeCommands = ref<ExecuteCommand[]>([])
 const currentExecuteCommand = ref<ExecuteCommand | undefined>()
@@ -48,6 +58,7 @@ const showCreateModal = ref<boolean>(false)
 const showLogModal = ref<boolean>(false)
 const showStdModal = ref<boolean>(false)
 const showDeleteModal = ref<boolean>(false)
+const stdError = ref<boolean>(false)
 const hosts = ref<Host[]>([])
 const toRepresentation = computed(() => {
   return executeCommands.value.map((item) => usePickKey(item, Object.values(columns.value)))
@@ -60,22 +71,31 @@ const actions = computed(() => {
 const hostsOptions = computed(() => {
   if (newExecuteCommand.value.protocol === 'ssh') {
     return hosts.value
-      .filter(el => el.ssh_credentials.length > 0)
+      .filter((el) => el.ssh_credentials.length > 0)
       .map(({ id, name, ip }) => ({ id, name, ip }))
   } else {
     return hosts.value
-      .filter(el => el.winrm_credentials.length > 0)
+      .filter((el) => el.winrm_credentials.length > 0)
       .map(({ id, name, ip }) => ({ id, name, ip }))
   }
 })
 
-async function getExecuteCommands() {
-  const { data } = await apiClient.get('/execute-command/')
-  executeCommands.value = data
-  const hasRunning = executeCommands.value.some(el => el.status === 'progress' || el.status === 'queue')
+async function getExecuteCommands(page: number = 0) {
+  let url = `/execute-command/?page_size=${pageSize.value}`
+  if (page > 0) {
+    url += `&page=${page}`
+  }
+  const { data } = await apiClient.get(url)
+  executeCommands.value = data.results
+  const { results: _, ...rest } = data
+  paginator.value = rest
+  localStorage.setItem('executeCommandPage', paginator.value.current.toString())
+  const hasRunning = executeCommands.value.some(
+    (el) => el.status === 'progress' || el.status === 'queue',
+  )
 
   if (hasRunning && intervalId === null) {
-      intervalId = window.setInterval(getExecuteCommands, 10000)
+    intervalId = window.setInterval(getExecuteCommands, 10000)
   }
 
   if (!hasRunning && intervalId !== null) {
@@ -88,13 +108,11 @@ let intervalId: number | null = null
 
 async function createExecuteCommand() {
   try {
-    const { data } = await apiClient.post('/execute-command/', newExecuteCommand.value)
-    executeCommands.value.unshift(data)
+    await apiClient.post('/execute-command/', newExecuteCommand.value)
+    await getExecuteCommands()
     showCreateModal.value = false
+    numberOfCommands.value = 1
     toastStore.defaultSuccess()
-    setTimeout(()=>{
-      getExecuteCommands()
-    }, 2000)
   } catch (error) {
     if (error instanceof AxiosError) {
       if (error.status === 400) {
@@ -108,10 +126,9 @@ async function deleteExecuteCommand() {
   if (!currentExecuteCommand.value) return
   const { status } = await apiClient.delete(`/execute-command/${currentExecuteCommand.value.id}/`)
   if (status === 204) {
-    const idx = executeCommands.value.findIndex(
-      (item) => item.id === currentExecuteCommand.value?.id,
-    )
-    executeCommands.value.splice(idx, 1)
+    executeCommands.value.length === 1
+      ? await getExecuteCommands()
+      : await getExecuteCommands(paginator.value.current)
     showDeleteModal.value = false
     currentExecuteCommand.value = undefined
     toastStore.defaultSuccess()
@@ -138,6 +155,9 @@ function showStd(id: number | string) {
   showStdModal.value = true
 }
 
+provide('paginator', paginator)
+provide('paginatorFn', getExecuteCommands)
+
 watch(showCreateModal, (newValue: boolean) => {
   if (!newValue) {
     newExecuteCommand.value = {
@@ -150,15 +170,34 @@ watch(showCreateModal, (newValue: boolean) => {
   }
 })
 
-onMounted(() => {
-  getHosts()
+watch(pageSize, (value) => {
   getExecuteCommands()
+  localStorage.setItem('executeCommandPageSize', String(value))
+})
+
+onMounted(() => {
+  const page = localStorage.getItem('executeCommandPage')
+  page ? getExecuteCommands(parseInt(page)) : getExecuteCommands()
+  getHosts()
+})
+
+onUnmounted(() => {
+  if (localStorage.getItem('executeCommandPage')) {
+    localStorage.removeItem('executeCommandPage')
+  }
 })
 </script>
 
 <template>
   <div>
-    <DataTable class="px-6 py-2" :actions :columns="Object.keys(columns)" :rows="toRepresentation">
+    <DataTable
+      class="px-6 py-2"
+      :actions
+      :columns="Object.keys(columns)"
+      :rows="toRepresentation"
+      v-model:page-size="pageSize"
+    >
+
       <template #cell="{ col, value }">
         <td class="px-6 py-4" colspan="2" v-if="col === 'created_by'">
           {{ value.first_name }} {{ value.last_name }}
@@ -193,10 +232,11 @@ onMounted(() => {
                   placeholder="Введите исполняемую команду"
                 />
                 <DangerButton
-                  @click="newExecuteCommand.command.splice(i-1, 1); numberOfCommands--"
+                  @click="newExecuteCommand.command.splice(i - 1, 1); numberOfCommands--"
                   v-if="numberOfCommands > 1"
                   class="h-fit"
-                >Удалить</DangerButton>
+                  >Удалить</DangerButton
+                >
               </div>
             </div>
             <SecondaryButton @click="numberOfCommands++">Добавить команду</SecondaryButton>
@@ -247,21 +287,47 @@ onMounted(() => {
       </Modal>
       <Modal v-model="showStdModal">
         <template #title>
-          Стандартный поток вывода операции <strong>{{ currentExecuteCommand?.id }}</strong>
+          Вывод операции <strong>{{ currentExecuteCommand?.id }}</strong>
         </template>
         <template #body>
+          <ul
+            class="flex flex-wrap text-sm font-medium text-center text-gray-500 dark:text-gray-400"
+          >
+            <li class="me-2">
+              <button
+                @click="stdError = false"
+                class="inline-block px-4 py-3 rounded-lg"
+                :class="[stdError
+                  ? 'hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer'
+                  : 'text-white bg-blue-600 active'
+                ]"
+              >
+                StdOut
+              </button>
+            </li>
+            <li class="me-2">
+              <button
+                @click="stdError = true"
+                class="inline-block px-4 py-3 rounded-lg"
+                :class="[!stdError
+                  ? 'hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer'
+                  : 'text-white bg-blue-600 active'
+                ]"
+              >
+                StdErr
+              </button>
+            </li>
+          </ul>
           <div class="p-4 max-h-[calc(100vh-20rem)] overflow-y-scroll">
             <ol class="relative border-s border-gray-200 dark:border-gray-800">
-              <li class="ms-4" v-for="(std, timestamp) in currentExecuteCommand?.stdout">
+              <li class="ms-4" v-for="(std, timestamp) in (stdError ? currentExecuteCommand?.stderr : currentExecuteCommand?.stdout)">
                 <div
                   class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-800"
                 ></div>
                 <time class="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500"
                   >{{ timestamp }}
                 </time>
-                <pre
-                  class="text-base font-normal text-gray-500 dark:text-gray-400"
-                >
+                <pre class="text-base font-normal text-gray-500 dark:text-gray-400">
                   {{ std }}
                 </pre>
               </li>
