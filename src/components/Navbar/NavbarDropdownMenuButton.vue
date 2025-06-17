@@ -23,7 +23,7 @@ defineEmits<{
   </button>
   <ul v-show="show" class="py-2 space-y-2" @click="$emit('buttonClick')">
     <NavbarMenuButton name="ExecuteCommand" is_link link="execute-command" />
-    <NavbarMenuButton name="SendFile" is_link />
+    <NavbarMenuButton name="SendFile" is_link link="send-file" />
     <NavbarMenuButton name="PrepareUpdate" is_link />
   </ul>
 </template>

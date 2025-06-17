@@ -8,6 +8,7 @@ import CredentialView from '@/views/CredentialView.vue'
 import TheSSHCredentials from '@/components/TheSSHCredentials.vue'
 import TheWinrmCredentials from '@/components/TheWinrmCredentials.vue'
 import ExecuteCommandView from '@/views/Operations/ExecuteCommandView.vue'
+import SendFileView from '@/views/Operations/SendFileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +51,12 @@ const router = createRouter({
       path: '/ops/exec',
       name: 'execute-command',
       component: ExecuteCommandView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/ops/send-file',
+      name: 'send-file',
+      component: SendFileView,
       meta: { requiresAuth: true },
     },
     {

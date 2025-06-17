@@ -33,7 +33,8 @@ const {
   askDelete,
   deleteOperation: deleteExecuteCommand
 } = useOperationDefault<ExecuteCommand, ExecuteCommandNew, Errors>(
-  '/execute-command/', () => ({hosts: [], command: [], protocol: 'ssh', sudo: false}),
+  '/execute-command/',
+  () => ({hosts: [], command: [], protocol: 'ssh', sudo: false}),
   'executeCommandPage'
 )
 

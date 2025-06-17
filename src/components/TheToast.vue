@@ -23,7 +23,7 @@ function onAfterLeave() {
 <template>
   <div
     v-show="showContainer"
-    class="fixed flex flex-col items-center w-full max-w-xs p-4 space-y-4 text-gray-500 bg-white rounded-lg shadow-sm right-5 bottom-5 dark:text-gray-400 dark:bg-gray-800"
+    class="fixed flex flex-col items-center w-full max-w-xs p-4 space-y-4 bg-transparent text-gray-500 rounded-lg shadow-sm right-5 bottom-5 dark:text-gray-400 "
     role="alert"
   >
     <TransitionGroup
