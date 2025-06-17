@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, provide, onUnmounted } from 'vue'
+import { computed, onMounted, ref, provide } from 'vue'
 import type { ExecuteCommand, ExecuteCommandNew } from '@/types/Ops.ts'
 import apiClient from '@/services/api.ts'
-import { useToast } from '@/stores/toast.ts'
 import { usePickKey } from '@/composables/pick_key.ts'
 import DataTable from '@/components/DataTable.vue'
 import Badge from '@/components/UI/Badge.vue'
@@ -14,22 +13,30 @@ import TextareaField from '@/components/UI/TextareaField.vue'
 import SelectField from '@/components/UI/SelectField.vue'
 import Toggle from '@/components/UI/Toggle.vue'
 import { AxiosError } from 'axios'
+import { useOperationDefault } from '@/composables/operation_default.ts'
 
 interface Errors {
   command?: string[]
 }
 
-interface Paginator {
-  count: number
-  next: number | null
-  previous: number | null
-  current: number
-  num_pages: number
-}
+const {
+  operations: executeCommands,
+  current: currentExecuteCommand,
+  newOperation: newExecuteCommand,
+  errors,
+  showCreateModal,
+  showDeleteModal,
+  toastStore,
+  pageSize,
+  paginator,
+  getOperations: getExecuteCommands,
+  askDelete,
+  deleteOperation: deleteExecuteCommand
+} = useOperationDefault<ExecuteCommand, ExecuteCommandNew, Errors>(
+  '/execute-command/', () => ({hosts: [], command: [], protocol: 'ssh', sudo: false}),
+  'executeCommandPage'
+)
 
-const toastStore = useToast()
-const paginator = ref<Paginator>({} as Paginator)
-const pageSize = ref<number>(Number(localStorage.getItem('executeCommandPageSize')) || 10)
 const columns = ref<Record<string, keyof ExecuteCommand>>({
   'Id': 'id',
   'Автор': 'created_by',
@@ -44,20 +51,10 @@ const actionList = ref<DataTableAction[]>([
   { label: 'Лог', action: showLog },
   { label: 'Std', action: showStd },
 ])
-const executeCommands = ref<ExecuteCommand[]>([])
-const currentExecuteCommand = ref<ExecuteCommand | undefined>()
-const newExecuteCommand = ref<ExecuteCommandNew>({
-  hosts: [],
-  command: [],
-  protocol: 'ssh',
-  sudo: false,
-})
-const errors = ref<Errors>({})
+
 const numberOfCommands = ref(1)
-const showCreateModal = ref<boolean>(false)
 const showLogModal = ref<boolean>(false)
 const showStdModal = ref<boolean>(false)
-const showDeleteModal = ref<boolean>(false)
 const stdError = ref<boolean>(false)
 const hosts = ref<Host[]>([])
 const toRepresentation = computed(() => {
@@ -80,32 +77,6 @@ const hostsOptions = computed(() => {
   }
 })
 
-async function getExecuteCommands(page: number = 0) {
-  let url = `/execute-command/?page_size=${pageSize.value}`
-  if (page > 0) {
-    url += `&page=${page}`
-  }
-  const { data } = await apiClient.get(url)
-  executeCommands.value = data.results
-  const { results: _, ...rest } = data
-  paginator.value = rest
-  localStorage.setItem('executeCommandPage', paginator.value.current.toString())
-  const hasRunning = executeCommands.value.some(
-    (el) => el.status === 'progress' || el.status === 'queue',
-  )
-
-  if (hasRunning && intervalId === null) {
-    intervalId = window.setInterval(getExecuteCommands, 10000)
-  }
-
-  if (!hasRunning && intervalId !== null) {
-    clearInterval(intervalId)
-    intervalId = null
-  }
-}
-
-let intervalId: number | null = null
-
 async function createExecuteCommand() {
   try {
     await apiClient.post('/execute-command/', newExecuteCommand.value)
@@ -122,27 +93,9 @@ async function createExecuteCommand() {
   }
 }
 
-async function deleteExecuteCommand() {
-  if (!currentExecuteCommand.value) return
-  const { status } = await apiClient.delete(`/execute-command/${currentExecuteCommand.value.id}/`)
-  if (status === 204) {
-    executeCommands.value.length === 1
-      ? await getExecuteCommands()
-      : await getExecuteCommands(paginator.value.current)
-    showDeleteModal.value = false
-    currentExecuteCommand.value = undefined
-    toastStore.defaultSuccess()
-  }
-}
-
 async function getHosts() {
   const { data } = await apiClient.get<Host[]>('/host')
   hosts.value = data
-}
-
-function askDelete(id: number | string) {
-  currentExecuteCommand.value = executeCommands.value.find((item) => item.id === id)
-  showDeleteModal.value = true
 }
 
 function showLog(id: number | string) {
@@ -158,34 +111,11 @@ function showStd(id: number | string) {
 provide('paginator', paginator)
 provide('paginatorFn', getExecuteCommands)
 
-watch(showCreateModal, (newValue: boolean) => {
-  if (!newValue) {
-    newExecuteCommand.value = {
-      hosts: [],
-      command: [],
-      protocol: 'ssh',
-      sudo: false,
-    }
-    errors.value = {}
-  }
-})
-
-watch(pageSize, (value) => {
-  getExecuteCommands()
-  localStorage.setItem('executeCommandPageSize', String(value))
-})
 
 onMounted(() => {
-  const page = localStorage.getItem('executeCommandPage')
-  page ? getExecuteCommands(parseInt(page)) : getExecuteCommands()
   getHosts()
 })
 
-onUnmounted(() => {
-  if (localStorage.getItem('executeCommandPage')) {
-    localStorage.removeItem('executeCommandPage')
-  }
-})
 </script>
 
 <template>
