@@ -22,3 +22,25 @@ export interface ExecuteCommandNew {
   protocol: 'ssh' | 'winrm'
   sudo: boolean
 }
+
+export interface SendFile extends BaseOperation {
+  hosts: Array<{id: number, name: string, ip: string}>
+  protocol: 'sftp' | 'smb'
+  local_path: string
+  target_path: string
+  file: File | null
+}
+
+export interface SendFileNew{
+  hosts: Array<number>
+  protocol: 'sftp' | 'smb'
+  local_path: string
+  target_path: string
+  file: File | null
+}
+
+export interface SendFileErrors {
+  local_path?: Array<string>
+  target_path?: Array<string>
+  file?: Array<string>
+}

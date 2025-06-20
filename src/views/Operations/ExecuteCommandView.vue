@@ -2,7 +2,6 @@
 import { computed, onMounted, ref, provide } from 'vue'
 import type { ExecuteCommand, ExecuteCommandNew } from '@/types/Ops.ts'
 import apiClient from '@/services/api.ts'
-import { usePickKey } from '@/composables/pick_key.ts'
 import DataTable from '@/components/DataTable.vue'
 import Badge from '@/components/UI/Badge.vue'
 import Modal from '@/components/Modal.vue'
@@ -19,11 +18,21 @@ interface Errors {
   command?: string[]
 }
 
+const columns: Record<string, keyof ExecuteCommand> = ({
+  'Id': 'id',
+  'Автор': 'created_by',
+  'Статус': 'status',
+  'Создана': 'created_at',
+  'Время последнего изменения': 'updated_at',
+  'Протокол': 'protocol',
+})
+
 const {
   operations: executeCommands,
   current: currentExecuteCommand,
   newOperation: newExecuteCommand,
   errors,
+  toRepresentation,
   showCreateModal,
   showDeleteModal,
   toastStore,
@@ -35,17 +44,10 @@ const {
 } = useOperationDefault<ExecuteCommand, ExecuteCommandNew, Errors>(
   '/execute-command/',
   () => ({hosts: [], command: [], protocol: 'ssh', sudo: false}),
-  'executeCommandPage'
+  'executeCommandPage',
+  columns
 )
 
-const columns = ref<Record<string, keyof ExecuteCommand>>({
-  'Id': 'id',
-  'Автор': 'created_by',
-  'Статус': 'status',
-  'Создана': 'created_at',
-  'Время последнего изменения': 'updated_at',
-  'Протокол': 'protocol',
-})
 const actionList = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
@@ -58,9 +60,6 @@ const showLogModal = ref<boolean>(false)
 const showStdModal = ref<boolean>(false)
 const stdError = ref<boolean>(false)
 const hosts = ref<Host[]>([])
-const toRepresentation = computed(() => {
-  return executeCommands.value.map((item) => usePickKey(item, Object.values(columns.value)))
-})
 const actions = computed(() => {
   return executeCommands.value.length
     ? actionList.value

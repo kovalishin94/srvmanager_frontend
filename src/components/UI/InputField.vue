@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  id: string
+  id?: string
   type?: string
   errors?: Array<String>
   label?: string
@@ -10,7 +10,7 @@ interface Props {
 }
 
 const {
-  id,
+  id = crypto.randomUUID(),
   type = 'text',
   errors = [],
   label = '',
