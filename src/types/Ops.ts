@@ -28,7 +28,7 @@ export interface SendFile extends BaseOperation {
   protocol: 'sftp' | 'smb'
   local_path: string
   target_path: string
-  file: File | null
+  file: string
 }
 
 export interface SendFileNew{

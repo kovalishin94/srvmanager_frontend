@@ -51,6 +51,7 @@ const actionList = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
   { label: 'Лог', action: showLog },
+  {label: 'Повторить', action: repeatSendFile}
 ])
 
 const showLogModal = ref<boolean>(false)
@@ -98,6 +99,26 @@ async function createSendFile() {
         errors.value = error.response?.data
       }
     }
+  }
+}
+
+async function repeatSendFile(id: number | string) {
+  let file_url = null
+  currentSendFile.value = sendFiles.value.find((el) => el.id === id)
+  if (!currentSendFile.value) return
+  currentSendFile.value.hosts.forEach(el => newSendFile.value.hosts.push(el.id))
+  newSendFile.value.protocol = currentSendFile.value.protocol
+  newSendFile.value.target_path = currentSendFile.value.target_path
+  if (currentSendFile.value.file) file_url = new URL(currentSendFile.value.file)
+  file_url ? newSendFile.value.local_path = `/app${file_url.pathname}` : newSendFile.value.local_path = currentSendFile.value.local_path
+  if (!newSendFile.value.local_path) return
+  await createSendFile()
+  newSendFile.value = {
+    hosts: [],
+    protocol: 'sftp',
+    local_path: '',
+    target_path: '',
+    file: null
   }
 }
 
