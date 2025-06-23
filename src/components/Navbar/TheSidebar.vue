@@ -2,6 +2,7 @@
 import NavbarMenuButton from '@/components/Navbar/NavbarMenuButton.vue'
 import NavbarDropdownMenuButton from '@/components/Navbar/NavbarDropdownMenuButton.vue'
 import { useUser } from '@/stores/user.ts'
+import OperationsIcon from '@/components/UI/Icons/OperationsIcon.vue'
 
 const userStore = useUser()
 const { modelValue } = defineProps<{
@@ -48,7 +49,19 @@ function close() {
           <NavbarMenuButton name="Учетные записи" is_link link="credentials" @click="close">
             <FingerprintIcon />
           </NavbarMenuButton>
-          <NavbarDropdownMenuButton @button-click="close"/>
+          <NavbarDropdownMenuButton label="Эталон" :icon="OperationsIcon" @button-click="close">
+            <template #menu-items>
+              <NavbarMenuButton name="Площадки Эталона" is_link link="etalon-instances" />
+              <NavbarMenuButton name="Файлы обновления" is_link link="update-file" />
+              <NavbarMenuButton name="Установки обновления" is_link link="etalon-update" />
+            </template>
+          </NavbarDropdownMenuButton>
+          <NavbarDropdownMenuButton label="Операции" :icon="OperationsIcon" @button-click="close">
+            <template #menu-items>
+              <NavbarMenuButton name="ExecuteCommand" is_link link="execute-command" />
+              <NavbarMenuButton name="SendFile" is_link link="send-file" />
+            </template>>
+          </NavbarDropdownMenuButton>
           <NavbarMenuButton @click="userStore.removeUserData(); close()" name="Выход">
             <ExitIcon />
           </NavbarMenuButton>

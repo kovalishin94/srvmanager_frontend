@@ -9,6 +9,9 @@ import TheSSHCredentials from '@/components/TheSSHCredentials.vue'
 import TheWinrmCredentials from '@/components/TheWinrmCredentials.vue'
 import ExecuteCommandView from '@/views/Operations/ExecuteCommandView.vue'
 import SendFileView from '@/views/Operations/SendFileView.vue'
+import EtalonInstanceView from '@/views/Etalon/EtalonInstanceView.vue'
+import EtalonUpdateView from '@/views/Etalon/EtalonUpdateView.vue'
+import UpdateFileView from '@/views/Etalon/UpdateFileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,6 +60,24 @@ const router = createRouter({
       path: '/ops/send-file',
       name: 'send-file',
       component: SendFileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/etalon/instances',
+      name: 'etalon-instances',
+      component: EtalonInstanceView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/etalon/files',
+      name: 'update-file',
+      component: UpdateFileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/etalon/update',
+      name: 'etalon-update',
+      component: EtalonUpdateView,
       meta: { requiresAuth: true },
     },
     {
