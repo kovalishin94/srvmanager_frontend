@@ -1,12 +1,13 @@
-import { onMounted, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import apiClient from '@/services/api.ts'
 import { useToast } from '@/stores/toast.ts'
+import { usePickKey } from '@/composables/pick_key.ts'
 
 export function useItemsDefault<
   T extends { id: number | string },
   TNew,
   TError extends Record<string, any>,
->(url: string, defaultEmpty: TNew) {
+>(url: string, defaultEmpty: TNew, columns: Record<string, keyof T> = {}) {
   const items = ref<T[]>([])
   const current = ref<T | undefined>(undefined)
   const newItem = ref<TNew>(defaultEmpty)
@@ -14,6 +15,11 @@ export function useItemsDefault<
   const showCreateModal = ref(false)
   const showDeleteModal = ref(false)
   const toastStore = useToast()
+  const toRepresentation = computed(() => {
+    return items.value.map((item) =>
+      usePickKey(item, Object.values(columns) as (keyof typeof item)[]),
+    )
+  })
 
   async function getItems() {
     const { data } = await apiClient.get(url)
@@ -53,8 +59,10 @@ export function useItemsDefault<
     current,
     newItem,
     errors,
+    toRepresentation,
     showCreateModal,
     showDeleteModal,
+    getItems,
     askDelete,
     deleteItem,
     toastStore,

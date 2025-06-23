@@ -4,7 +4,7 @@ export interface EtalonInstance {
   id: number
   url: string
   path_to_instance: string
-  host: number
+  host: number | null
   version: string
   tag: string
   stand: string
