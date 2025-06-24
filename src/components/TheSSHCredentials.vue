@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { provide, ref } from 'vue'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
 import type { SSHCredential, NewSSHCredential, ErrorSSHCredentials } from '@/types/Credential.ts'
@@ -11,23 +11,36 @@ import FileInput from '@/components/UI/FileInput.vue'
 import Toggle from '@/components/UI/Toggle.vue'
 import { useItemsDefault } from '@/composables/items_default.ts'
 
+const columns: Partial<Record<keyof SSHCredential, string>> = ({
+  id: 'id',
+  username: 'username',
+  port: 'port'
+})
+
 const {
-  items: credentials,
   current: currentCredential,
   newItem: newCredential,
   errors,
+  toRepresentation,
   showCreateModal,
   showDeleteModal,
-  askDelete,
-  deleteItem: deleteCredential,
   toastStore,
-} = useItemsDefault<SSHCredential, NewSSHCredential, ErrorSSHCredentials>('/ssh-credential/', {
+  pageSize,
+  paginator,
+  getItems: getSSHCredentials,
+  askDelete,
+  deleteItem: deleteCredential
+} = useItemsDefault<SSHCredential, NewSSHCredential, ErrorSSHCredentials>(
+  '/ssh-credential/', () => ({
   username: '',
   password: '',
   passphrase: '',
   ssh_key: null,
   port: 22,
-})
+  }),
+  'sshCredentialPage',
+  columns
+)
 
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
@@ -51,10 +64,10 @@ function makeFormData() {
 async function createCredential() {
   try {
     const formData = makeFormData()
-    const { data } = await apiClient.post('/ssh-credential/', formData, {
+    await apiClient.post('/ssh-credential/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    credentials.value.push(data)
+    await getSSHCredentials()
     showCreateModal.value = false
     toastStore.defaultSuccess()
   } catch (error) {
@@ -65,13 +78,21 @@ async function createCredential() {
     }
   }
 }
+
+provide('paginator', paginator)
+provide('paginatorFn', getSSHCredentials)
 </script>
 
 <template>
-  <DataTable class="px-6 py-2" :columns="['Id', 'Username', 'Port']" :rows="credentials" :actions>
+  <DataTable
+    class="px-6 py-2"
+    :columns="Object.values(columns)"
+    :rows="toRepresentation"
+    :actions
+    v-model:page-size="pageSize"
+  >
     <template #cell="{ col, value }">
-      <div class="hidden" v-if="col === 'host'"></div>
-      <td class="px-6 py-4" colspan="2" v-else>
+      <td class="px-6 py-4" colspan="2">
         <strong v-if="col === 'id'">{{ value }}</strong>
         <span v-else>{{ value }}</span>
       </td>

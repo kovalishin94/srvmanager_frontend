@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, provide, ref, watch } from 'vue'
 import { useItemsDefault } from '@/composables/items_default.ts'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
@@ -12,31 +12,41 @@ import type { SSHCredential, WinRMCredential } from '@/types/Credential.ts'
 import SelectField from '@/components/UI/SelectField.vue'
 import Popover from '@/components/UI/Popover.vue'
 
+
+const columns: Record<keyof Host, string> = ({
+  id: 'Id',
+  name: 'Имя',
+  ip: 'Ip адрес',
+  os: 'Операционная система',
+  ssh_credentials: 'Учетные записи SSH',
+  winrm_credentials: 'Учетные записи Windows'
+})
 const {
   items: hosts,
   current: currentHost,
   newItem: newHost,
   errors,
+  toRepresentation,
+  toastStore,
+  pageSize,
+  paginator,
   showCreateModal,
   showDeleteModal,
+  getItems: getHosts,
   askDelete,
   deleteItem: deleteHost,
-  toastStore
-} = useItemsDefault<Host, NewHost, ErrorHosts>('/host/', {
+} = useItemsDefault<Host, NewHost, ErrorHosts>('/host/', () => ({
   name: '',
   os: 'linux',
   ip: '',
   ssh_credentials: [],
   winrm_credentials: [],
-})
+}),
+  'hostsPage',
+  columns
+)
 const showEditModal = ref(false)
-const columns = ref<Array<string>>([
-  'Id',
-  'Имя',
-  'IP адрес',
-  'Операционная система',
-  'Учетные записи',
-])
+
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
@@ -55,8 +65,8 @@ async function createHost() {
   if (newHost.value.winrm_credentials.includes('')) newHost.value.winrm_credentials = []
   if (newHost.value.os === 'linux') newHost.value.winrm_credentials = []
   try {
-    const { data } = await apiClient.post('/host/', newHost.value)
-    hosts.value.push(data)
+    await apiClient.post('/host/', newHost.value)
+    await getHosts()
     showCreateModal.value = false
     toastStore.defaultSuccess()
   } catch (error) {
@@ -88,13 +98,13 @@ async function updateHost() {
 }
 
 async function getSSHCredentials() {
-  const { data } = await apiClient.get('/ssh-credential/')
-  sshCredentials.value = data
+  const { data } = await apiClient.get('/ssh-credential/?page_size=10000')
+  sshCredentials.value = data.results
 }
 
 async function getWinRMCredentials() {
-  const { data } = await apiClient.get('/winrm-credential/')
-  winrmCredentials.value = data
+  const { data } = await apiClient.get('/winrm-credential/?page_size=10000')
+  winrmCredentials.value = data.results
 }
 
 const sshOptions = computed(() => {
@@ -124,10 +134,13 @@ watch(showEditModal, (newValue: boolean) => {
   }
 })
 
-onMounted(() => {
-  getSSHCredentials()
-  getWinRMCredentials()
+onMounted(async () => {
+  await getSSHCredentials()
+  await getWinRMCredentials()
 })
+
+provide('paginator', paginator)
+provide('paginatorFn', getHosts)
 </script>
 
 <template>
@@ -135,19 +148,20 @@ onMounted(() => {
     <!--  Таблица с данными   -->
     <DataTable
       class="px-6 py-2"
-      :columns
-      :rows="hosts"
+      :columns="Object.values(columns)"
+      :rows="toRepresentation"
       :actions="hosts.length ? actions : actions.filter((el) => el.label === 'Создать')"
+      v-model:page-size="pageSize"
     >
       <template #cell="{ col, value }">
-        <td class="px-6 py-4" colspan="1" v-if="col === 'ssh_credentials'">
+        <td class="px-6 py-4" colspan="2" v-if="col === 'ssh_credentials'">
           <Popover v-if="value.length">
             <template #object><SecretIcon /></template>
             <template #title>SSH</template>
             <template #body>{{ findSSHCredential(value[0]) }}</template>
           </Popover>
         </td>
-        <td class="px-6 py-4" colspan="1" v-else-if="col === 'winrm_credentials'">
+        <td class="px-6 py-4" colspan="2" v-else-if="col === 'winrm_credentials'">
           <Popover v-if="value.length">
             <template #object><SecretIcon /></template>
             <template #title>WinRM</template>

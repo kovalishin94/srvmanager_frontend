@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { SendFile, SendFileNew, SendFileErrors } from '@/types/Ops.ts'
 import type { Host } from '@/types/Host.ts'
-import { useOperationDefault } from '@/composables/operation_default.ts'
 import { computed, onMounted, provide, ref } from 'vue'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
 import apiClient from '@/services/api.ts'
@@ -13,23 +12,24 @@ import SelectTable from '@/components/SelectTable.vue'
 import InputField from '@/components/UI/InputField.vue'
 import FileInput from '@/components/UI/FileInput.vue'
 import { AxiosError } from 'axios'
+import { useItemsDefault } from '@/composables/items_default.ts'
 
-const columns: Record<string, keyof SendFile> = {
-  'Id': 'id',
-  'Автор': 'created_by',
-  'Статус': 'status',
-  'Создана': 'created_at',
-  'Время последнего изменения': 'updated_at',
-  'Локальная директория': 'local_path',
-  'Целевая директория': 'target_path',
-  'Файл': 'file',
-  'Протокол': 'protocol',
+const columns: Partial<Record<keyof SendFile, string>> = {
+  id: 'Id',
+  created_by: 'Автор',
+  status: 'Статус',
+  created_at: 'Создана',
+  updated_at: 'Время последнего изменения',
+  local_path: 'Локальная директория',
+  target_path: 'Целевая директория',
+  file: 'Файл',
+  protocol: 'Протокол',
 }
 
 const {
-  operations: sendFiles,
+  items: sendFiles,
   current: currentSendFile,
-  newOperation: newSendFile,
+  newItem: newSendFile,
   errors,
   toRepresentation,
   showCreateModal,
@@ -37,10 +37,10 @@ const {
   toastStore,
   pageSize,
   paginator,
-  getOperations: getSendFiles,
+  getItems: getSendFiles,
   askDelete,
-  deleteOperation: deleteSendFile,
-} = useOperationDefault<SendFile, SendFileNew, SendFileErrors>(
+  deleteItem: deleteSendFile,
+} = useItemsDefault<SendFile, SendFileNew, SendFileErrors>(
   '/send-file/',
   () => ({ hosts: [], protocol: 'sftp', local_path: '', target_path: '', file: null }),
   'sendFilePage',
@@ -123,8 +123,8 @@ async function repeatSendFile(id: number | string) {
 }
 
 async function getHosts() {
-  const { data } = await apiClient.get<Host[]>('/host')
-  hosts.value = data
+  const { data } = await apiClient.get<{results: Host[], [key: string]: any}>('/host')
+  hosts.value = data.results
 }
 
 function showLog(id: number | string) {
@@ -145,7 +145,7 @@ onMounted(() => {
     <DataTable
       class="px-6 py-2"
       :actions
-      :columns="Object.keys(columns)"
+      :columns="Object.values(columns)"
       :rows="toRepresentation"
       v-model:page-size="pageSize"
     >

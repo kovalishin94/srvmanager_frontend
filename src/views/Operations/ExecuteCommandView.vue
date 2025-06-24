@@ -12,25 +12,25 @@ import TextareaField from '@/components/UI/TextareaField.vue'
 import SelectField from '@/components/UI/SelectField.vue'
 import Toggle from '@/components/UI/Toggle.vue'
 import { AxiosError } from 'axios'
-import { useOperationDefault } from '@/composables/operation_default.ts'
+import { useItemsDefault } from '@/composables/items_default.ts'
 
 interface Errors {
   command?: string[]
 }
 
-const columns: Record<string, keyof ExecuteCommand> = ({
-  'Id': 'id',
-  'Автор': 'created_by',
-  'Статус': 'status',
-  'Создана': 'created_at',
-  'Время последнего изменения': 'updated_at',
-  'Протокол': 'protocol',
+const columns: Partial<Record<keyof ExecuteCommand, string>> = ({
+  id: 'Id',
+  created_by: 'Автор',
+  status: 'Статус',
+  created_at: 'Создана',
+  updated_at: 'Время последнего изменения',
+  protocol: 'Протокол',
 })
 
 const {
-  operations: executeCommands,
+  items: executeCommands,
   current: currentExecuteCommand,
-  newOperation: newExecuteCommand,
+  newItem: newExecuteCommand,
   errors,
   toRepresentation,
   showCreateModal,
@@ -38,10 +38,10 @@ const {
   toastStore,
   pageSize,
   paginator,
-  getOperations: getExecuteCommands,
+  getItems: getExecuteCommands,
   askDelete,
-  deleteOperation: deleteExecuteCommand
-} = useOperationDefault<ExecuteCommand, ExecuteCommandNew, Errors>(
+  deleteItem: deleteExecuteCommand
+} = useItemsDefault<ExecuteCommand, ExecuteCommandNew, Errors>(
   '/execute-command/',
   () => ({hosts: [], command: [], protocol: 'ssh', sudo: false}),
   'executeCommandPage',
@@ -94,8 +94,8 @@ async function createExecuteCommand() {
 }
 
 async function getHosts() {
-  const { data } = await apiClient.get<Host[]>('/host')
-  hosts.value = data
+  const { data } = await apiClient.get<{results: Host[], [key: string]: any}>('/host')
+  hosts.value = data.results
 }
 
 function showLog(id: number | string) {
@@ -111,11 +111,9 @@ function showStd(id: number | string) {
 provide('paginator', paginator)
 provide('paginatorFn', getExecuteCommands)
 
-
-onMounted(() => {
-  getHosts()
+onMounted(async () => {
+  await getHosts()
 })
-
 </script>
 
 <template>
@@ -123,7 +121,7 @@ onMounted(() => {
     <DataTable
       class="px-6 py-2"
       :actions
-      :columns="Object.keys(columns)"
+      :columns="Object.values(columns)"
       :rows="toRepresentation"
       v-model:page-size="pageSize"
     >

@@ -39,7 +39,7 @@ export function useOperationDefault<
   let intervalId: number | null = null
 
   async function getOperations(page: number = 0) {
-    const { data } = await apiClient.get(
+    const { data } = await apiClient.get<{results: T[]} & Paginator>(
       page > 0
         ? `${url}?page_size=${pageSize.value}&page=${page}`
         : `${url}?page_size=${pageSize.value}`,
