@@ -123,7 +123,7 @@ async function repeatSendFile(id: number | string) {
 }
 
 async function getHosts() {
-  const { data } = await apiClient.get<{results: Host[], [key: string]: any}>('/host')
+  const { data } = await apiClient.get<{results: Host[], [key: string]: any}>('/host/?page_size=10000')
   hosts.value = data.results
 }
 
