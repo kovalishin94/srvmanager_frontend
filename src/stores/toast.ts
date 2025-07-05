@@ -19,7 +19,7 @@ export const useToast = defineStore('toast', {
       }, duration)
     },
     defaultSuccess() {
-      this.addToast('Действие успешно выполнено', 'success')
+      this.addToast('Успешно', 'success')
     }
   },
 })

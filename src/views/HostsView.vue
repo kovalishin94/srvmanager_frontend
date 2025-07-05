@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, provide, ref, watch } from 'vue'
+import { useItemsDefault } from '@/composables/items_default.ts'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
 import type { Host, NewHost, ErrorHosts } from '@/types/Host.ts'
@@ -7,25 +8,45 @@ import Modal from '@/components/Modal.vue'
 import InputField from '@/components/UI/InputField.vue'
 import { AxiosError } from 'axios'
 import type { DataTableAction } from '@/types/DataTableAction.ts'
-import { useToast } from '@/stores/toast.ts'
 import type { SSHCredential, WinRMCredential } from '@/types/Credential.ts'
 import SelectField from '@/components/UI/SelectField.vue'
+import Popover from '@/components/UI/Popover.vue'
 
-const toastStore = useToast()
-const showCreateModal = ref(false)
-const showDeleteModal = ref(false)
-const showEditModal = ref(false)
-const currentHost = ref<Host | undefined>()
-const columns = ref<Array<string>>(['Id', 'Имя', 'IP адрес', 'Операционная система'])
-const hosts = ref<Array<Host>>([])
-const newHost = ref<NewHost>({
+
+const columns: Record<keyof Host, string> = ({
+  id: 'Id',
+  name: 'Имя',
+  ip: 'Ip адрес',
+  os: 'Операционная система',
+  ssh_credentials: 'Учетные записи SSH',
+  winrm_credentials: 'Учетные записи Windows'
+})
+const {
+  items: hosts,
+  current: currentHost,
+  newItem: newHost,
+  errors,
+  toRepresentation,
+  toastStore,
+  pageSize,
+  paginator,
+  showCreateModal,
+  showDeleteModal,
+  getItems: getHosts,
+  askDelete,
+  deleteItem: deleteHost,
+} = useItemsDefault<Host, NewHost, ErrorHosts>('/host/', () => ({
   name: '',
   os: 'linux',
   ip: '',
   ssh_credentials: [],
   winrm_credentials: [],
-})
-const errors = ref<ErrorHosts>({})
+}),
+  'hostsPage',
+  columns
+)
+const showEditModal = ref(false)
+
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
@@ -34,39 +55,18 @@ const actions = ref<DataTableAction[]>([
 const sshCredentials = ref<SSHCredential[]>([])
 const winrmCredentials = ref<WinRMCredential[]>([])
 
-function askDelete(id: number | string) {
-  currentHost.value = hosts.value.find((host) => host.id === id)
-  showDeleteModal.value = true
-}
-
 function askEdit(id: number | string) {
-  currentHost.value = { ...hosts.value.find((host) => host.id === id)! }
+  currentHost.value = hosts.value.find((host) => host.id === id)
   showEditModal.value = true
 }
 
-async function deleteHost() {
-  if (!currentHost.value) return
-  const { status } = await apiClient.delete(`/host/${currentHost.value.id}/`)
-  if (status === 204) {
-    const idx = hosts.value.findIndex((host) => host.id === currentHost.value?.id)
-    hosts.value.splice(idx, 1)
-    showDeleteModal.value = false
-    currentHost.value = undefined
-    toastStore.defaultSuccess()
-  }
-}
-
-async function getHosts() {
-  const { data } = await apiClient.get('/host')
-  hosts.value = data
-}
-
 async function createHost() {
-  if ( newHost.value.ssh_credentials.includes('')) newHost.value.ssh_credentials = []
-  if ( newHost.value.winrm_credentials.includes('')) newHost.value.winrm_credentials = []
+  if (newHost.value.ssh_credentials.includes('')) newHost.value.ssh_credentials = []
+  if (newHost.value.winrm_credentials.includes('')) newHost.value.winrm_credentials = []
+  if (newHost.value.os === 'linux') newHost.value.winrm_credentials = []
   try {
-    const { data } = await apiClient.post('/host/', newHost.value)
-    hosts.value.push(data)
+    await apiClient.post('/host/', newHost.value)
+    await getHosts()
     showCreateModal.value = false
     toastStore.defaultSuccess()
   } catch (error) {
@@ -80,8 +80,9 @@ async function createHost() {
 
 async function updateHost() {
   if (!currentHost.value) return
-  if ( currentHost.value.ssh_credentials.includes('')) currentHost.value.ssh_credentials = []
-  if ( currentHost.value.winrm_credentials.includes('')) currentHost.value.winrm_credentials = []
+  if (currentHost.value.ssh_credentials.includes('')) currentHost.value.ssh_credentials = []
+  if (currentHost.value.winrm_credentials.includes('')) currentHost.value.winrm_credentials = []
+  if (currentHost.value.os === 'linux') currentHost.value.winrm_credentials = []
   try {
     const { data } = await apiClient.put(`/host/${currentHost.value.id}/`, currentHost.value)
     hosts.value = hosts.value.map((el) => (el.id === data.id ? data : el))
@@ -97,13 +98,13 @@ async function updateHost() {
 }
 
 async function getSSHCredentials() {
-  const { data } = await apiClient.get('/ssh-credential/')
-  sshCredentials.value = data
+  const { data } = await apiClient.get('/ssh-credential/?page_size=10000')
+  sshCredentials.value = data.results
 }
 
 async function getWinRMCredentials() {
-  const { data } = await apiClient.get('/winrm-credential/')
-  winrmCredentials.value = data
+  const { data } = await apiClient.get('/winrm-credential/?page_size=10000')
+  winrmCredentials.value = data.results
 }
 
 const sshOptions = computed(() => {
@@ -111,33 +112,35 @@ const sshOptions = computed(() => {
 })
 
 const winrmOptions = computed(() => {
-  return winrmCredentials.value.map(({ id, username }) => ({ label: `${id}_${username}`, value: id }))
+  return winrmCredentials.value.map(({ id, username }) => ({
+    label: `${id}_${username}`,
+    value: id,
+  }))
 })
 
-watch( showCreateModal, (newValue: boolean) => {
+function findSSHCredential(id: number) {
+  const credential = sshCredentials.value.find((el) => el.id === id)
+  return credential ? `${credential.id}_${credential.username}` : ''
+}
+
+function findWinRMCredential(id: number) {
+  const credential = winrmCredentials.value.find((el) => el.id === id)
+  return credential ? `${credential.id}_${credential.username}` : ''
+}
+
+watch(showEditModal, (newValue: boolean) => {
   if (!newValue) {
-    newHost.value = {
-      name: '',
-      os: 'linux',
-      ip: '',
-      ssh_credentials: [],
-      winrm_credentials: [],
-    }
     errors.value = {}
   }
 })
 
-watch( showEditModal, (newValue: boolean) => {
-  if (!newValue) {
-    errors.value = {}
-  }
+onMounted(async () => {
+  await getSSHCredentials()
+  await getWinRMCredentials()
 })
 
-onMounted(() => {
-  getHosts()
-  getSSHCredentials()
-  getWinRMCredentials()
-})
+provide('paginator', paginator)
+provide('paginatorFn', getHosts)
 </script>
 
 <template>
@@ -145,15 +148,27 @@ onMounted(() => {
     <!--  Таблица с данными   -->
     <DataTable
       class="px-6 py-2"
-      :columns
-      :rows="hosts"
+      :columns="Object.values(columns)"
+      :rows="toRepresentation"
       :actions="hosts.length ? actions : actions.filter((el) => el.label === 'Создать')"
+      v-model:page-size="pageSize"
     >
       <template #cell="{ col, value }">
-        <td
-          class="px-6 py-4"
-          v-if="!['ssh_credentials', 'winrm_credentials'].includes(String(col))"
-        >
+        <td class="px-6 py-4" colspan="2" v-if="col === 'ssh_credentials'">
+          <Popover v-if="value.length">
+            <template #object><SecretIcon /></template>
+            <template #title>SSH</template>
+            <template #body>{{ findSSHCredential(value[0]) }}</template>
+          </Popover>
+        </td>
+        <td class="px-6 py-4" colspan="2" v-else-if="col === 'winrm_credentials'">
+          <Popover v-if="value.length">
+            <template #object><SecretIcon /></template>
+            <template #title>WinRM</template>
+            <template #body>{{ findWinRMCredential(value[0]) }}</template>
+          </Popover>
+        </td>
+        <td v-else class="px-6 py-4" colspan="2">
           <strong v-if="col === 'id'">{{ value }}</strong>
           <div class="inline-flex justify-center" v-else-if="col === 'os'">
             <LinuxIcon v-if="value === 'linux'" />
@@ -161,13 +176,12 @@ onMounted(() => {
           </div>
           <span v-else>{{ value }}</span>
         </td>
-        <div class="hidden" v-else></div>
       </template>
     </DataTable>
     <Teleport to="body">
       <!--  Modal: Создать хост   -->
       <Modal v-model="showCreateModal">
-        <template #title> Создать новый хост </template>
+        <template #title>Создать новый хост</template>
         <template #body>
           <div class="flex flex-col gap-y-3 px-12">
             <InputField
@@ -203,6 +217,7 @@ onMounted(() => {
               placeholder="Учетная запись SSH не выбрана"
             />
             <SelectField
+              v-if="newHost.os === 'windows'"
               :options="winrmOptions"
               v-model.number="newHost.winrm_credentials[0]"
               placeholder="Учетная запись WinRM не выбрана"
@@ -251,6 +266,7 @@ onMounted(() => {
               placeholder="Учетная запись SSH не выбрана"
             />
             <SelectField
+              v-if="currentHost.os === 'windows'"
               :options="winrmOptions"
               v-model.number="currentHost.winrm_credentials[0]"
               placeholder="Учетная запись WinRM не выбрана"

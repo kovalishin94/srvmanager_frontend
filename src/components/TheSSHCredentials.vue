@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
+import { provide, ref } from 'vue'
 import apiClient from '@/services/api.ts'
 import DataTable from '@/components/DataTable.vue'
 import type { SSHCredential, NewSSHCredential, ErrorSSHCredentials } from '@/types/Credential.ts'
@@ -9,26 +9,45 @@ import InputField from '@/components/UI/InputField.vue'
 import { AxiosError } from 'axios'
 import FileInput from '@/components/UI/FileInput.vue'
 import Toggle from '@/components/UI/Toggle.vue'
-import { useToast } from '@/stores/toast.ts'
+import { useItemsDefault } from '@/composables/items_default.ts'
 
-const toastStore = useToast()
-const actions = ref<DataTableAction[]>([
-  { label: 'Создать', action: () => (showCreateModal.value = true) },
-  { label: 'Удалить', action: askDelete },
-])
-const credentials = ref<Array<SSHCredential>>([])
-const showCreateModal = ref(false)
-const showAddSSHKey = ref<boolean>(false)
-const showDeleteModal = ref(false)
-const newCredential = ref<NewSSHCredential>({
+const columns: Partial<Record<keyof SSHCredential, string>> = ({
+  id: 'id',
+  username: 'username',
+  port: 'port'
+})
+
+const {
+  current: currentCredential,
+  newItem: newCredential,
+  errors,
+  toRepresentation,
+  showCreateModal,
+  showDeleteModal,
+  toastStore,
+  pageSize,
+  paginator,
+  getItems: getSSHCredentials,
+  askDelete,
+  deleteItem: deleteCredential
+} = useItemsDefault<SSHCredential, NewSSHCredential, ErrorSSHCredentials>(
+  '/ssh-credential/', () => ({
   username: '',
   password: '',
   passphrase: '',
   ssh_key: null,
   port: 22,
-})
-const errors = ref<ErrorSSHCredentials>({})
-const currentCredential = ref<SSHCredential | undefined>()
+  }),
+  'sshCredentialPage',
+  columns
+)
+
+const actions = ref<DataTableAction[]>([
+  { label: 'Создать', action: () => (showCreateModal.value = true) },
+  { label: 'Удалить', action: askDelete },
+])
+
+const showAddSSHKey = ref<boolean>(false)
 
 function makeFormData() {
   const formData = new FormData()
@@ -42,23 +61,13 @@ function makeFormData() {
   return formData
 }
 
-function askDelete(id: number | string) {
-  currentCredential.value = credentials.value.find((credential) => credential.id === id)
-  showDeleteModal.value = true
-}
-
-async function getCredentials() {
-  const { data } = await apiClient.get('/ssh-credential/')
-  credentials.value = data
-}
-
 async function createCredential() {
   try {
     const formData = makeFormData()
-    const { data } = await apiClient.post('/ssh-credential/', formData, {
+    await apiClient.post('/ssh-credential/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    credentials.value.push(data)
+    await getSSHCredentials()
     showCreateModal.value = false
     toastStore.defaultSuccess()
   } catch (error) {
@@ -70,41 +79,20 @@ async function createCredential() {
   }
 }
 
-async function deleteCredential() {
-  if (!currentCredential.value) return
-  const { status } = await apiClient.delete(`/ssh-credential/${currentCredential.value.id}/`)
-  if (status === 204) {
-    const idx = credentials.value.findIndex((credential) => credential.id === currentCredential.value?.id)
-    credentials.value.splice(idx, 1)
-    showDeleteModal.value = false
-    currentCredential.value = undefined
-    toastStore.defaultSuccess()
-  }
-}
-
-onMounted(() => {
-  getCredentials()
-})
-
-watchEffect(() => {
-  if (!showCreateModal.value) {
-    newCredential.value = {
-      username: '',
-      password: '',
-      passphrase: '',
-      ssh_key: null,
-      port: 22,
-    }
-    errors.value = {}
-  }
-})
+provide('paginator', paginator)
+provide('paginatorFn', getSSHCredentials)
 </script>
 
 <template>
-  <DataTable class="px-6 py-2" :columns="['Id', 'Username', 'Port']" :rows="credentials" :actions>
+  <DataTable
+    class="px-6 py-2"
+    :columns="Object.values(columns)"
+    :rows="toRepresentation"
+    :actions
+    v-model:page-size="pageSize"
+  >
     <template #cell="{ col, value }">
-      <div class="hidden" v-if="col === 'host'"></div>
-      <td class="px-6 py-4" v-else>
+      <td class="px-6 py-4" colspan="2">
         <strong v-if="col === 'id'">{{ value }}</strong>
         <span v-else>{{ value }}</span>
       </td>
@@ -146,7 +134,9 @@ watchEffect(() => {
     </Modal>
     <Modal v-model="showDeleteModal" :type="'delete'" size="max-w-md">
       <template #body>
-        Вы действительно хотите удалить учетную запись <strong>"{{ currentCredential?.username }}"</strong> с id <strong>"{{ currentCredential?.id }}"?</strong>
+        Вы действительно хотите удалить учетную запись
+        <strong>"{{ currentCredential?.username }}"</strong> с id
+        <strong>"{{ currentCredential?.id }}"?</strong>
       </template>
       <template #footer>
         <DangerButton @click="deleteCredential">Удалить</DangerButton>

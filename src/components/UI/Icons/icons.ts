@@ -12,6 +12,7 @@ import SearchIcon from './SearchIcon.vue'
 import ThemeIcon from './ThemeIcon.vue'
 import ToastIcons from './ToastIcons.vue'
 import WindowsIcon from './WindowsIcon.vue'
+import SecretIcon from './SecretIcon.vue'
 
 export default <Record<string, Component>>{
   AttentionIcon,
@@ -27,4 +28,5 @@ export default <Record<string, Component>>{
   ThemeIcon,
   ToastIcons,
   WindowsIcon,
+  SecretIcon,
 }

@@ -7,6 +7,11 @@ import { useUser } from '@/stores/user.ts'
 import CredentialView from '@/views/CredentialView.vue'
 import TheSSHCredentials from '@/components/TheSSHCredentials.vue'
 import TheWinrmCredentials from '@/components/TheWinrmCredentials.vue'
+import ExecuteCommandView from '@/views/Operations/ExecuteCommandView.vue'
+import SendFileView from '@/views/Operations/SendFileView.vue'
+import EtalonInstanceView from '@/views/Etalon/EtalonInstanceView.vue'
+import EtalonUpdateView from '@/views/Etalon/EtalonUpdateView.vue'
+import UpdateFileView from '@/views/Etalon/UpdateFileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,6 +51,36 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/ops/exec',
+      name: 'execute-command',
+      component: ExecuteCommandView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/ops/send-file',
+      name: 'send-file',
+      component: SendFileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/etalon/instances',
+      name: 'etalon-instances',
+      component: EtalonInstanceView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/etalon/files',
+      name: 'update-file',
+      component: UpdateFileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/etalon/update',
+      name: 'etalon-update',
+      component: EtalonUpdateView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView,
@@ -53,7 +88,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _, next) => {
   const userStore = useUser()
   if (to.matched.some((record) => record.meta.requiresAuth) && !userStore.user.isAuthenticated) {
     next({ name: 'login' })

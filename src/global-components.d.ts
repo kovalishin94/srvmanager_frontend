@@ -15,6 +15,7 @@ declare module '@vue/runtime-core' {
     ThemeIcon:     DefineComponent<{}, {}, any>
     ToastIcons:    DefineComponent<{}, {}, any>
     WindowsIcon:   DefineComponent<{}, {}, any>
+    SecretIcon:   DefineComponent<{}, {}, any>
     DangerButton:  DefineComponent<{}, {}, any>
     MainButton:    DefineComponent<{}, {}, any>
     SecondaryButton: DefineComponent<{}, {}, any>
