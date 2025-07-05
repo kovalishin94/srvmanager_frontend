@@ -24,6 +24,7 @@ export interface EtalonInstanceErrors {
 }
 
 export interface UpdateFile {
+  id: number
   file: File | null
   version: string
   tag: string
