@@ -6,7 +6,7 @@ interface Option {
 
 interface Props {
   options: Option[]
-  modelValue: string | number | undefined
+  modelValue: string | number | undefined | null
   placeholder?: string
 }
 const id = crypto.randomUUID()

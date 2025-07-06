@@ -39,13 +39,13 @@ export interface UpdateFileErrors {
 }
 
 export interface EtalonUpdate extends BaseOperation {
-  instances: Array<number>
-  update_file: number
+  instances: Array<Pick<EtalonInstance, 'id' | 'url' | 'version' | 'tag' | 'stand' >>
+  update_file: Pick<UpdateFile, 'id' | 'version' | 'tag'>
 }
 
 export interface EtalonUpdateNew {
   instances: Array<number>
-  update_file: number
+  update_file: number | null
 }
 
 export interface EtalonUpdateErrors {
