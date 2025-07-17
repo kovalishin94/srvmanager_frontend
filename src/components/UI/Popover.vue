@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { initPopovers } from 'flowbite'
 import { onMounted } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
-const id = crypto.randomUUID()
+const id = uuidv4()
 
 onMounted(() => {
   initPopovers()

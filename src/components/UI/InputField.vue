@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { v4 as uuidv4 } from 'uuid'
 interface Props {
   id?: string
   type?: string
@@ -10,7 +11,7 @@ interface Props {
 }
 
 const {
-  id = crypto.randomUUID(),
+  id = uuidv4(),
   type = 'text',
   errors = [],
   label = '',

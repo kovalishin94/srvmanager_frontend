@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Toast } from '@/types/Toast.ts'
+import { v4 as uuidv4 } from 'uuid'
 
 export const useToast = defineStore('toast', {
   state: () => ({
@@ -11,15 +12,18 @@ export const useToast = defineStore('toast', {
       type: 'success' | 'warning' | 'danger',
       duration: number = 5000,
     ): void {
-      const id = crypto.randomUUID()
+      const id = uuidv4()
       this.toasts.push({ id, message, type, duration })
 
       setTimeout(() => {
-        this.toasts.splice(this.toasts.findIndex(item => item.id = id), 1)
+        this.toasts.splice(
+          this.toasts.findIndex((item) => (item.id = id)),
+          1,
+        )
       }, duration)
     },
     defaultSuccess() {
       this.addToast('Успешно', 'success')
-    }
+    },
   },
 })

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
-const id = String(crypto.randomUUID())
+const id = uuidv4()
 
 const {
   modelValue = null,
