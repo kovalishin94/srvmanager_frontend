@@ -52,15 +52,22 @@ const {
   columns,
 )
 
+const showLogModal = ref<boolean>(false)
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
+  { label: 'Лог', action: showLog },
 ])
 
 const etalonInstances = ref<
   Array<Pick<EtalonInstance, 'id' | 'url' | 'stand' | 'version' | 'tag'>>
 >([])
 const updateFilesOptions = ref<Array<{ label: string; value: number }>>([])
+
+function showLog(id: number | string) {
+  currentEtalonUpdate.value = etalonUpdates.value.find((item) => item.id === id)
+  showLogModal.value = true
+}
 
 async function createEtalonUpdate() {
   try {
@@ -133,7 +140,9 @@ onMounted(async () => {
               <template #object>{{ instance.url }}</template>
               <template #title>{{ instance.url }}</template>
               <template #body
-                >Stand: {{ instance.stand }}, Version: {{ instance.version }}-{{ instance.tag }}</template
+                >Stand: {{ instance.stand }}, Version: {{ instance.version }}-{{
+                  instance.tag
+                }}</template
               >
             </Popover>
           </div>
@@ -172,6 +181,37 @@ onMounted(async () => {
         <template #footer>
           <DangerButton @click="deleteEtalonUpdate">Удалить</DangerButton>
           <SecondaryButton @click="showDeleteModal = false">Отмена</SecondaryButton>
+        </template>
+      </Modal>
+      <Modal v-model="showLogModal">
+        <template #title>
+          Лог операции <strong>{{ currentEtalonUpdate?.id }}</strong>
+        </template>
+        <template #body>
+          <div class="p-4 max-h-[calc(100vh-20rem)] overflow-y-scroll">
+            <ol class="relative border-s border-gray-200 dark:border-gray-800">
+              <li class="ms-4" v-for="(log, timestamp) in currentEtalonUpdate?.log">
+                <div
+                  class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-800"
+                ></div>
+                <time class="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500"
+                  >{{ timestamp }}
+                </time>
+                <p
+                  class="text-base font-normal text-gray-500 dark:text-gray-400"
+                  :class="{
+                    'text-red-500 dark:text-red-400': log.includes('ошибка'),
+                    'text-green-500 dark:text-green-500': log.includes('успешно'),
+                  }"
+                >
+                  {{ log }}
+                </p>
+              </li>
+            </ol>
+          </div>
+        </template>
+        <template #footer>
+          <SecondaryButton @click="showLogModal = false">Закрыть</SecondaryButton>
         </template>
       </Modal>
     </Teleport>
