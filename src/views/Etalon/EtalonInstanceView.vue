@@ -89,7 +89,7 @@ onMounted(async () => {
     </DataTable>
     <Teleport to="body">
       <Modal v-model="showCreateModal">
-        <template #title>Создать новый хост</template>
+        <template #title>Создать новую площадку</template>
         <template #body>
           <div class="flex flex-col gap-y-3 px-12">
             <SelectField :options="hosts" v-model="newEtalonInstance.host!" placeholder="Хост" />
