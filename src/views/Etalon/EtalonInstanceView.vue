@@ -17,6 +17,7 @@ const columns: Partial<Record<keyof EtalonInstance, string>> = {
   version: 'Версия',
   tag: 'Тег',
   stand: 'stand',
+  docker_command: 'docker команда',
   is_valid: 'Валидность',
 }
 const {

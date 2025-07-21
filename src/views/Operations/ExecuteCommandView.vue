@@ -18,14 +18,16 @@ interface Errors {
   command?: string[]
 }
 
-const columns: Partial<Record<keyof ExecuteCommand, string>> = ({
+const columns: Partial<Record<keyof ExecuteCommand, string>> = {
   id: 'Id',
+  command: 'Команды',
+  hosts: 'Хосты',
   created_by: 'Автор',
   status: 'Статус',
   created_at: 'Создана',
   updated_at: 'Время последнего изменения',
   protocol: 'Протокол',
-})
+}
 
 const {
   items: executeCommands,
@@ -40,12 +42,12 @@ const {
   paginator,
   getItems: getExecuteCommands,
   askDelete,
-  deleteItem: deleteExecuteCommand
+  deleteItem: deleteExecuteCommand,
 } = useItemsDefault<ExecuteCommand, ExecuteCommandNew, Errors>(
   '/execute-command/',
-  () => ({hosts: [], command: [], protocol: 'ssh', sudo: false}),
+  () => ({ hosts: [], command: [], protocol: 'ssh', sudo: false }),
   'executeCommandPage',
-  columns
+  columns,
 )
 
 const actionList = ref<DataTableAction[]>([
@@ -94,7 +96,9 @@ async function createExecuteCommand() {
 }
 
 async function getHosts() {
-  const { data } = await apiClient.get<{results: Host[], [key: string]: any}>('/host/?page_size=10000')
+  const { data } = await apiClient.get<{ results: Host[]; [key: string]: any }>(
+    '/host/?page_size=10000',
+  )
   hosts.value = data.results
 }
 
@@ -125,8 +129,13 @@ onMounted(async () => {
       :rows="toRepresentation"
       v-model:page-size="pageSize"
     >
-
       <template #cell="{ col, value }">
+        <td class="px-6 py-4" colspan="2" v-if="col === 'command'">
+          <p v-for="c in value">{{ c }}</p>
+        </td>
+        <td class="px-6 py-4" colspan="2" v-if="col === 'hosts'">
+          <p v-for="host in value">{{ host.name }} : {{ host.ip }}</p>
+        </td>
         <td class="px-6 py-4" colspan="2" v-if="col === 'created_by'">
           {{ value.first_name }} {{ value.last_name }}
         </td>
@@ -225,9 +234,10 @@ onMounted(async () => {
               <button
                 @click="stdError = false"
                 class="inline-block px-4 py-3 rounded-lg"
-                :class="[stdError
-                  ? 'hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer'
-                  : 'text-white bg-blue-600 active'
+                :class="[
+                  stdError
+                    ? 'hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer'
+                    : 'text-white bg-blue-600 active',
                 ]"
               >
                 StdOut
@@ -237,9 +247,10 @@ onMounted(async () => {
               <button
                 @click="stdError = true"
                 class="inline-block px-4 py-3 rounded-lg"
-                :class="[!stdError
-                  ? 'hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer'
-                  : 'text-white bg-blue-600 active'
+                :class="[
+                  !stdError
+                    ? 'hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer'
+                    : 'text-white bg-blue-600 active',
                 ]"
               >
                 StdErr
@@ -248,7 +259,12 @@ onMounted(async () => {
           </ul>
           <div class="p-4 max-h-[calc(100vh-20rem)] overflow-y-scroll">
             <ol class="relative border-s border-gray-200 dark:border-gray-800">
-              <li class="ms-4" v-for="(std, timestamp) in (stdError ? currentExecuteCommand?.stderr : currentExecuteCommand?.stdout)">
+              <li
+                class="ms-4"
+                v-for="(std, timestamp) in stdError
+                  ? currentExecuteCommand?.stderr
+                  : currentExecuteCommand?.stdout"
+              >
                 <div
                   class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-800"
                 ></div>
