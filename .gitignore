@@ -4,3 +4,4 @@ node_modules
 .env
 static
 dist
+build.sh

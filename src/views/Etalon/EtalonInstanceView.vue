@@ -47,6 +47,7 @@ const {
 const actions = ref<DataTableAction[]>([
   { label: 'Создать', action: () => (showCreateModal.value = true) },
   { label: 'Удалить', action: askDelete },
+  {label: 'Синхронизировать', action: checkInstance},
 ])
 const hosts = ref<Array<{ label: string; value: number }>>([])
 async function createEtalonInstance() {
@@ -70,6 +71,13 @@ async function getHosts() {
   )
   hosts.value = data.results.map(({ id, name, ip }) => ({ label: `${name}-${ip}`, value: id }))
 }
+
+async function checkInstance(id: string | number) {
+    const { status } = await apiClient.get(`/etalon-instance/${id}/check/`)
+    if (status === 200) {
+      toastStore.defaultSuccess()
+    }
+  }
 
 provide('paginator', paginator)
 provide('paginatorFn', getEtalonInstances)
