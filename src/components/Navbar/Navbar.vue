@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useUser } from '@/stores/user.ts'
 import TheSidebar from '@/components/Navbar/TheSidebar.vue'
-import Logo from '@/components/UI/Icons/Logo.vue'
+// import Logo from '@/components/UI/Icons/Logo.vue'
 
 const userStore = useUser()
 const showSidebar = ref(false)
@@ -15,7 +15,6 @@ const showSidebar = ref(false)
       <TransparentButton @click.stop="showSidebar = true">
         <MenuIcon />
       </TransparentButton>
-      <Logo class="ml-2"/>
       <TransparentButton class="ml-auto" @click="userStore.toggleTheme">
         <ThemeIcon />
       </TransparentButton>

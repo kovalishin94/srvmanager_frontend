@@ -18,7 +18,7 @@ watch(current, (newValue: CredentialType) => {
 <template>
   <div class="flex flex-col gap-y-5">
     <Tabs
-      class="mx-18"
+      class="mx-5"
       v-model="current"
       :tabs="[
         { label: 'Учетные записи SSH', value: 'ssh' },
