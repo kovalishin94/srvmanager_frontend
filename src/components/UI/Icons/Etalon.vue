@@ -3,7 +3,7 @@
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
     id="body_1"
-    class="w-6 h-6"
+    class="w-6 h-6 mt-1"
   >
     <g transform="matrix(1.3333334 0 0 1.3333334 0 0)">
       <image
